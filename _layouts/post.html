@@ -1,0 +1,101 @@
+---
+layout: default
+---
+
+<article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <!-- Post Header -->
+  <header class="mb-8">
+    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+      {{ page.title }}
+    </h1>
+    
+    <div class="flex flex-wrap items-center text-gray-600 dark:text-gray-400 text-sm gap-4 mb-4">
+      <time datetime="{{ page.date | date_to_xmlschema }}">
+        {{ page.date | date: "%B %d, %Y" }}
+      </time>
+      
+      {% if page.author %}
+      <span>•</span>
+      <span>{{ page.author }}</span>
+      {% endif %}
+      
+      {% assign words = content | number_of_words %}
+      {% assign reading_time = words | divided_by: 200 %}
+      {% if reading_time == 0 %}
+        {% assign reading_time = 1 %}
+      {% endif %}
+      <span>•</span>
+      <span>{{ reading_time }} min read</span>
+    </div>
+    
+    {% if page.tags.size > 0 %}
+    <div class="flex flex-wrap gap-2 mb-6">
+      {% for tag in page.tags %}
+      <a href="/blog?tag={{ tag | slugify }}" class="tag">
+        {{ tag }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if page.excerpt %}
+    <p class="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
+      {{ page.excerpt }}
+    </p>
+    {% endif %}
+  </header>
+  
+  <!-- Featured Image -->
+  {% if page.image %}
+  <div class="mb-8 rounded-xl overflow-hidden">
+    <img src="{{ page.image | relative_url }}" 
+         alt="{{ page.title }}" 
+         class="w-full h-auto">
+  </div>
+  {% endif %}
+  
+  <!-- Post Content -->
+  <div class="prose prose-lg dark:prose-dark max-w-none">
+    {{ content }}
+  </div>
+  
+  <!-- Post Footer -->
+  <footer class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+    <!-- Share buttons -->
+    <div class="mb-8">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Share this post</h3>
+      <div class="flex gap-4">
+        <a href="https://twitter.com/intent/tweet?text={{ page.title | uri_escape }}&url={{ page.url | absolute_url | uri_escape }}" 
+           target="_blank"
+           rel="noopener noreferrer"
+           class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200">
+          Twitter
+        </a>
+        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ page.url | absolute_url | uri_escape }}" 
+           target="_blank"
+           rel="noopener noreferrer"
+           class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors duration-200">
+          LinkedIn
+        </a>
+      </div>
+    </div>
+    
+    <!-- Related posts -->
+    {% if page.tags.size > 0 %}
+    {% assign related_posts = site.posts | where_exp: "post", "post.url != page.url" | limit: 3 %}
+    {% if related_posts.size > 0 %}
+    <div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Related Posts</h3>
+      <div class="grid grid-cols-1 gap-4">
+        {% for post in related_posts %}
+        <a href="{{ post.url | relative_url }}" class="block p-4 card hover:scale-[1.02] transition-transform duration-200">
+          <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ post.title }}</h4>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{{ post.date | date: "%B %d, %Y" }}</p>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+  </footer>
+</article>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+{% include head.html %}
+<body class="flex flex-col min-h-screen">
+  {% include navigation.html %}
+  
+  <main class="flex-grow pt-16">
+    {{ content }}
+  </main>
+  
+  {% include footer.html %}
+</body>
+</html>

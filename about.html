@@ -1,0 +1,101 @@
+---
+layout: page
+title: About Me
+permalink: /about/
+---
+
+<div class="mb-12">
+  <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">About Me</h1>
+</div>
+
+<div class="prose prose-lg dark:prose-dark max-w-none">
+  <div class="card p-8 mb-8">
+    <div class="flex flex-col md:flex-row gap-8 items-start">
+      <div class="flex-shrink-0">
+        <div class="w-48 h-48 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full"></div>
+      </div>
+      
+      <div class="flex-grow">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          Hi, I'm {{ site.title }}
+        </h2>
+        
+        <p class="text-gray-700 dark:text-gray-300 mb-4">
+          {{ site.description }}
+        </p>
+        
+        <p class="text-gray-700 dark:text-gray-300 mb-4">
+          I'm passionate about building elegant solutions to complex problems. With expertise in 
+          modern web technologies, I specialize in creating performant, accessible, and user-friendly 
+          applications that make a real difference.
+        </p>
+        
+        <p class="text-gray-700 dark:text-gray-300">
+          When I'm not coding, you can find me exploring new technologies, contributing to open source 
+          projects, or sharing knowledge through blog posts and talks.
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">What I Do</h2>
+  
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+    <div class="card p-6">
+      <div class="text-4xl mb-4">💻</div>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        Full-Stack Development
+      </h3>
+      <p class="text-gray-700 dark:text-gray-300">
+        Building modern web applications with React, Node.js, and other cutting-edge technologies.
+      </p>
+    </div>
+    
+    <div class="card p-6">
+      <div class="text-4xl mb-4">🎨</div>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        UI/UX Design
+      </h3>
+      <p class="text-gray-700 dark:text-gray-300">
+        Creating beautiful, intuitive interfaces that users love, with a focus on accessibility.
+      </p>
+    </div>
+    
+    <div class="card p-6">
+      <div class="text-4xl mb-4">☁️</div>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        Cloud Architecture
+      </h3>
+      <p class="text-gray-700 dark:text-gray-300">
+        Designing and deploying scalable cloud solutions on AWS, Azure, and other platforms.
+      </p>
+    </div>
+    
+    <div class="card p-6">
+      <div class="text-4xl mb-4">🚀</div>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        Performance Optimization
+      </h3>
+      <p class="text-gray-700 dark:text-gray-300">
+        Optimizing applications for speed, efficiency, and an exceptional user experience.
+      </p>
+    </div>
+  </div>
+  
+  <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Let's Connect</h2>
+  
+  <p class="text-gray-700 dark:text-gray-300 mb-6">
+    I'm always interested in hearing about new projects and opportunities. Feel free to reach out!
+  </p>
+  
+  <div class="flex flex-wrap gap-4">
+    {% for social in site.data.social %}
+    <a href="{{ social.url }}" 
+       target="_blank"
+       rel="noopener noreferrer"
+       class="btn-outline">
+      {{ social.name }}
+    </a>
+    {% endfor %}
+  </div>
+</div>

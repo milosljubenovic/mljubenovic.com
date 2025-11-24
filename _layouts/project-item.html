@@ -1,0 +1,86 @@
+---
+layout: default
+---
+
+<article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="mb-8">
+    <a href="/projects" class="text-primary-600 dark:text-primary-400 hover:underline">
+      ← Back to Projects
+    </a>
+  </div>
+  
+  <header class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+      {{ page.title }}
+    </h1>
+    
+    {% if page.description %}
+    <p class="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
+      {{ page.description }}
+    </p>
+    {% endif %}
+    
+    <div class="flex flex-wrap gap-4 mt-6">
+      {% if page.demo_url %}
+      <a href="{{ page.demo_url }}" 
+         target="_blank"
+         rel="noopener noreferrer"
+         class="btn-primary">
+        View Live Demo
+      </a>
+      {% endif %}
+      
+      {% if page.github_url %}
+      <a href="{{ page.github_url }}" 
+         target="_blank"
+         rel="noopener noreferrer"
+         class="btn-outline">
+        View on GitHub
+      </a>
+      {% endif %}
+    </div>
+  </header>
+  
+  {% if page.images %}
+  <div class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+    {% for image in page.images %}
+    <div class="rounded-xl overflow-hidden">
+      <img src="{{ image | relative_url }}" 
+           alt="{{ page.title }}" 
+           class="w-full h-auto">
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  
+  <div class="prose prose-lg dark:prose-dark max-w-none mb-8">
+    {{ content }}
+  </div>
+  
+  {% if page.tech_stack %}
+  <div class="mb-8">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tech Stack</h3>
+    <div class="flex flex-wrap gap-2">
+      {% for tech in page.tech_stack %}
+      <span class="tag">{{ tech }}</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  
+  {% if page.features %}
+  <div>
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Key Features</h3>
+    <ul class="space-y-2">
+      {% for feature in page.features %}
+      <li class="flex items-start">
+        <svg class="w-6 h-6 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span class="text-gray-700 dark:text-gray-300">{{ feature }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</article>

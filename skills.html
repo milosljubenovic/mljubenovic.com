@@ -1,0 +1,45 @@
+---
+layout: page
+title: Skills
+permalink: /skills/
+---
+
+<div class="mb-12">
+  <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Skills & Technologies</h1>
+  <p class="text-xl text-gray-600 dark:text-gray-400">
+    A comprehensive overview of my technical expertise and proficiencies
+  </p>
+</div>
+
+<div class="space-y-12">
+  {% for skill_group in site.data.skills %}
+  <section>
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+      {{ skill_group.category }}
+    </h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {% for item in skill_group.items %}
+      <div class="card p-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">{{ item.icon }}</span>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              {{ item.name }}
+            </h3>
+          </div>
+          <span class="text-sm font-medium text-primary-600 dark:text-primary-400">
+            {{ item.proficiency }}%
+          </span>
+        </div>
+        
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div class="bg-gradient-to-r from-primary-500 to-secondary-500 h-2 rounded-full transition-all duration-500" 
+               style="width: {{ item.proficiency }}%"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>

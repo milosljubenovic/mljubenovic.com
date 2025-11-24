@@ -1,0 +1,69 @@
+# Site settings
+title: Milos Ljubenovic
+email: your-email@example.com
+description: >-
+  Full-stack developer and technology enthusiast. Building elegant solutions
+  to complex problems. Specializing in web development, cloud architecture,
+  and modern JavaScript frameworks.
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://mljubenovic.com" # the base hostname & protocol for your site
+twitter_username: your_twitter
+github_username: milosljubenovic
+
+# Build settings
+markdown: kramdown
+theme: minima
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Collections
+collections:
+  experience:
+    output: true
+    permalink: /experience/:path/
+  projects:
+    output: true
+    permalink: /projects/:path/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
+      author: "Milos Ljubenovic"
+  - scope:
+      path: ""
+      type: "experience"
+    values:
+      layout: "experience-item"
+  - scope:
+      path: ""
+      type: "projects"
+    values:
+      layout: "project-item"
+  - scope:
+      path: ""
+    values:
+      layout: "page"
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - package.json
+  - package-lock.json
+  - postcss.config.js
+  - tailwind.config.js
+  - README.md
+  - CUSTOMIZATION.md
+  - setup.sh
+  - start.sh

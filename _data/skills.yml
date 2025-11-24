@@ -1,0 +1,89 @@
+- category: Languages
+  items:
+    - name: JavaScript
+      proficiency: 95
+      icon: 📜
+    - name: TypeScript
+      proficiency: 90
+      icon: 📘
+    - name: Python
+      proficiency: 85
+      icon: 🐍
+    - name: Ruby
+      proficiency: 80
+      icon: 💎
+    - name: HTML/CSS
+      proficiency: 95
+      icon: 🎨
+
+- category: Frameworks & Libraries
+  items:
+    - name: React
+      proficiency: 90
+      icon: ⚛️
+    - name: Next.js
+      proficiency: 85
+      icon: ▲
+    - name: Vue.js
+      proficiency: 80
+      icon: 💚
+    - name: Node.js
+      proficiency: 90
+      icon: 🟢
+    - name: Express
+      proficiency: 85
+      icon: 🚂
+    - name: Jekyll
+      proficiency: 75
+      icon: 🧪
+
+- category: Tools & Platforms
+  items:
+    - name: Git
+      proficiency: 95
+      icon: 🔀
+    - name: Docker
+      proficiency: 85
+      icon: 🐳
+    - name: AWS
+      proficiency: 80
+      icon: ☁️
+    - name: GitHub Actions
+      proficiency: 85
+      icon: 🔄
+    - name: Vercel
+      proficiency: 80
+      icon: 🔺
+    - name: Netlify
+      proficiency: 80
+      icon: 🌐
+
+- category: Databases
+  items:
+    - name: PostgreSQL
+      proficiency: 85
+      icon: 🐘
+    - name: MongoDB
+      proficiency: 80
+      icon: 🍃
+    - name: Redis
+      proficiency: 75
+      icon: 🔴
+    - name: SQLite
+      proficiency: 80
+      icon: 📦
+
+- category: Design & UI/UX
+  items:
+    - name: Tailwind CSS
+      proficiency: 90
+      icon: 🎨
+    - name: Figma
+      proficiency: 75
+      icon: 🎯
+    - name: Responsive Design
+      proficiency: 95
+      icon: 📱
+    - name: Accessibility
+      proficiency: 85
+      icon: ♿
