@@ -1,0 +1,52 @@
+#characterCanvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transition: left 0.05s linear;
+}
+
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(20px, -20px) scale(1.1); }
+  50% { transform: translate(-20px, 20px) scale(0.9); }
+  75% { transform: translate(20px, 10px) scale(1.05); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.cloud {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 5s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 10s;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #8b5cf6, #ec4899);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #7c3aed, #db2777);
+}

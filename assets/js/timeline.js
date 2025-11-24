@@ -1,0 +1,642 @@
+// Character Sprite Animation with Individual Frames
+class SpriteCharacter {
+  constructor(canvasId, framesPath) {
+    this.canvas = document.getElementById(canvasId);
+    this.ctx = this.canvas.getContext('2d');
+    
+    // Load individual frame images
+    this.frames = [
+      '/assets/timeline/walking/standing.png',
+      '/assets/timeline/walking/walkin_1.png',
+      '/assets/timeline/walking/walking_2.png',
+      '/assets/timeline/walking/walking_3.png'
+    ];
+    this.images = [];
+    this.imagesLoaded = 0;
+    
+    // Animation configuration
+    this.scale = 1;         // Scale up the character
+    this.currentFrame = 0;
+    this.frameDelay = 5;    // Frames to wait before switching sprite
+    this.frameCounter = 0;
+    
+    // Position (world position, not screen position)
+    this.worldX = 0;
+    this.targetWorldX = 0;
+    this.speed = 3;
+    this.speedMultiplier = 1;
+    this.isWalking = false;
+    
+    // Load all frame images
+    this.loadImages();
+  }
+  
+  loadImages() {
+    console.log('Loading character images...');
+    this.frames.forEach((src, index) => {
+      const img = new Image();
+      img.onload = () => {
+        this.imagesLoaded++;
+        console.log(`Image ${index} loaded (${this.imagesLoaded}/${this.frames.length})`);
+        if (this.imagesLoaded === this.frames.length) {
+          // All images loaded, setup canvas and draw
+          const firstImage = this.images[0];
+          this.canvas.width = firstImage.width * this.scale;
+          this.canvas.height = firstImage.height * this.scale;
+          console.log('All images loaded, canvas size:', this.canvas.width, 'x', this.canvas.height);
+          this.draw();
+        }
+      };
+      img.onerror = () => {
+        console.error('Failed to load image:', src);
+      };
+      img.src = src;
+      this.images[index] = img;
+    });
+  }
+  
+  draw() {
+    if (this.images.length === 0 || !this.images[this.currentFrame].complete) return;
+    
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    const currentImage = this.images[this.currentFrame];
+    this.ctx.drawImage(
+      currentImage,
+      0, 0,
+      this.canvas.width, this.canvas.height
+    );
+  }
+  
+  update() {
+    // Character just animates in place, doesn't move
+    if (this.isWalking) {
+      // Animate sprite (cycle through frames 1, 2, 3)
+      this.frameCounter++;
+      if (this.frameCounter >= this.frameDelay) {
+        this.frameCounter = 0;
+        // Cycle through walking frames (1, 2, 3)
+        this.currentFrame = ((this.currentFrame - 1 + 1) % 3) + 1;
+      }
+      
+      this.draw();
+    }
+  }
+  
+  startWalking() {
+    if (!this.isWalking) {
+      this.isWalking = true;
+      // Only set to frame 1 if we're starting from standing
+      if (this.currentFrame === 0) {
+        this.currentFrame = 1;
+      }
+    }
+  }
+  
+  stopWalking() {
+    this.isWalking = false;
+    this.currentFrame = 0; // Return to standing frame
+    this.draw();
+  }
+  
+  standStill() {
+    // Use this when we actually want to return to standing
+    this.isWalking = false;
+    this.currentFrame = 0;
+    this.draw();
+  }
+  
+  reset() {
+    this.standStill();
+  }
+  
+  setSpeed(multiplier) {
+    this.speedMultiplier = multiplier;
+  }
+}
+
+// Timeline Manager
+class Timeline {
+  constructor() {
+    this.character = new SpriteCharacter('characterCanvas', '/assets/timeline/walking_sprites.png');
+    this.milestones = [
+      { 
+        year: '2019', 
+        title: 'RT-RK - Automotive Software Engineer', 
+        position: 10, 
+        location: 'Novi Sad',
+        logo: '/assets/timeline/companies/rtrk_logo.jpg',
+        company: 'RT-RK'
+      },
+      { 
+        year: '2020', 
+        title: 'Aerwave - Platform Development Lead', 
+        position: 22, 
+        location: 'Dallas, TX',
+        logo: '/assets/timeline/companies/aerwave_logo.jpeg',
+        company: 'Aerwave'
+      },
+      { 
+        year: '2020', 
+        title: 'Clear Moon - CTO', 
+        position: 34, 
+        location: 'Miami, FL',
+        logo: '/assets/timeline/companies/clear_moon_logo.jpeg',
+        company: 'Clear Moon'
+      },
+      { 
+        year: '2021', 
+        title: 'Vay - Automotive Software Developer', 
+        position: 46, 
+        location: 'Berlin',
+        logo: '/assets/timeline/companies/vay_logo.png',
+        company: 'Vay'
+      },
+      { 
+        year: '2023', 
+        title: 'Aerwave - Technical Development Lead', 
+        position: 58, 
+        location: 'Dallas, TX',
+        logo: '/assets/timeline/companies/aerwave_logo.jpeg',
+        company: 'Aerwave'
+      },
+      { 
+        year: '2023', 
+        title: 'Clouddle - Technical Development Lead', 
+        position: 70, 
+        location: 'Florida',
+        logo: '/assets/timeline/companies/clouddle_logo.png',
+        company: 'Clouddle'
+      },
+      { 
+        year: '2024', 
+        title: 'Adapptiv - Senior Software Engineer', 
+        position: 82, 
+        location: 'London (Remote)',
+        logo: null,
+        company: 'Adapptiv'
+      },
+      { 
+        year: '2024', 
+        title: 'symphony.is - Senior Software Engineer', 
+        position: 94, 
+        location: 'Niš',
+        logo: '/assets/timeline/companies/symphony_logo.png',
+        company: 'symphony.is'
+      }
+    ];
+    this.currentMilestone = 0;
+    this.speeds = [
+      { name: 'Slow', value: 0.5 },
+      { name: 'Normal', value: 1 },
+      { name: 'Fast', value: 2 }
+    ];
+    this.currentSpeed = 1;
+    this.worldContainer = document.getElementById('worldContainer');
+    this.gameContainer = document.getElementById('gameContainer');
+    this.worldOffset = 0;
+    this.targetWorldOffset = 0;
+    this.scrollSpeed = 2;
+    this.isScrolling = false;
+    
+    // Infinite generation tracking
+    this.clouds = [];
+    this.trees = [];
+    this.rocks = [];
+    this.totalDistance = 0;
+    this.nextCloudX = 0;
+    this.nextTreeX = 0;
+    this.nextRockX = 0;
+    
+    this.init();
+  }
+  
+  init() {
+    console.log('Timeline initializing...');
+    console.log('World container:', this.worldContainer);
+    console.log('Game container:', this.gameContainer);
+    this.renderTimelinePoints();
+    this.setupControls();
+    this.animate();
+    console.log('Timeline initialized with', this.milestones.length, 'milestones');
+    
+    // Spawn initial dynamic elements
+    this.spawnInitialElements();
+  }
+  
+  spawnInitialElements() {
+    const containerWidth = this.gameContainer.offsetWidth;
+    
+    // Spawn initial clouds spread across the screen
+    for (let i = 0; i < 5; i++) {
+      const x = (containerWidth / 5) * i + Math.random() * 100;
+      this.createCloud(x);
+    }
+    
+    // Spawn initial trees
+    for (let i = 0; i < 2; i++) {
+      const x = containerWidth * 0.5 + (i * containerWidth * 0.3);
+      this.createTree(x);
+    }
+    
+    // Spawn initial rocks
+    for (let i = 0; i < 3; i++) {
+      const x = containerWidth * 0.4 + (i * containerWidth * 0.25);
+      this.createRock(x);
+    }
+    
+    this.nextCloudX = 0;
+    this.nextTreeX = 0;
+    this.nextRockX = 0;
+  }
+  
+  createCloud(xPosition) {
+    const cloud = document.createElement('div');
+    const scale = 0.8 + Math.random() * 0.6; // 0.8 to 1.4
+    const top = 40 + Math.random() * 120;
+    const opacity = 0.6 + Math.random() * 0.2;
+    
+    cloud.className = 'cloud absolute';
+    cloud.style.left = xPosition + 'px';
+    cloud.style.top = top + 'px';
+    cloud.style.zIndex = '2';
+    
+    // Create puffy cloud with multiple overlapping circles
+    const baseSize = 30 * scale;
+    cloud.innerHTML = `
+      <div class="relative" style="width: ${baseSize * 3}px; height: ${baseSize * 1.2}px;">
+        <!-- Main body circles -->
+        <div class="absolute rounded-full" style="width: ${baseSize}px; height: ${baseSize}px; background: rgba(255, 255, 255, ${opacity}); left: 0; bottom: 0;"></div>
+        <div class="absolute rounded-full" style="width: ${baseSize * 1.3}px; height: ${baseSize * 1.3}px; background: rgba(255, 255, 255, ${opacity}); left: ${baseSize * 0.6}px; bottom: ${baseSize * 0.1}px;"></div>
+        <div class="absolute rounded-full" style="width: ${baseSize * 1.1}px; height: ${baseSize * 1.1}px; background: rgba(255, 255, 255, ${opacity}); left: ${baseSize * 1.6}px; bottom: 0;"></div>
+        <!-- Top puffs -->
+        <div class="absolute rounded-full" style="width: ${baseSize * 0.7}px; height: ${baseSize * 0.7}px; background: rgba(255, 255, 255, ${opacity * 0.9}); left: ${baseSize * 0.3}px; bottom: ${baseSize * 0.6}px;"></div>
+        <div class="absolute rounded-full" style="width: ${baseSize * 0.8}px; height: ${baseSize * 0.8}px; background: rgba(255, 255, 255, ${opacity * 0.9}); left: ${baseSize * 1.2}px; bottom: ${baseSize * 0.8}px;"></div>
+      </div>
+    `;
+    
+    document.getElementById('cloudsContainer').appendChild(cloud);
+    this.clouds.push({ element: cloud, x: xPosition });
+  }
+  
+  createTree(xPosition) {
+    const tree = document.createElement('div');
+    const isLarge = Math.random() > 0.5;
+    const height = isLarge ? 96 : 80;
+    
+    tree.className = 'tree absolute';
+    tree.style.left = xPosition + 'px';
+    tree.style.bottom = '25%';
+    tree.style.zIndex = '5';
+    tree.innerHTML = `
+      <div class="relative" style="height: ${height}px">
+        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 ${isLarge ? 'w-5 h-20' : 'w-4 h-16'} bg-amber-800 dark:bg-amber-900 rounded-sm"></div>
+        <div class="absolute ${isLarge ? 'bottom-14' : 'bottom-10'} left-1/2 -translate-x-1/2">
+          <div class="${isLarge ? 'w-24 h-24' : 'w-20 h-20'} bg-green-600 dark:bg-green-800 rounded-full"></div>
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 ${isLarge ? 'w-18 h-18' : 'w-16 h-16'} bg-green-500 dark:bg-green-700 rounded-full"></div>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('treesContainer').appendChild(tree);
+    this.trees.push({ element: tree, x: xPosition });
+  }
+  
+  createRock(xPosition) {
+    const rock = document.createElement('div');
+    const size = 20 + Math.random() * 30; // 20-50px
+    const rotation = (Math.random() - 0.5) * 60; // -30 to 30 degrees
+    const hasHighlight = Math.random() > 0.5;
+    
+    rock.className = 'rock absolute';
+    rock.style.left = xPosition + 'px';
+    rock.style.bottom = '0';
+    rock.innerHTML = `
+      <div class="relative">
+        <div class="bg-gradient-to-br from-gray-500 to-gray-700 dark:from-gray-600 dark:to-gray-800 rounded-full shadow-lg" style="width: ${size}px; height: ${size * 0.7}px; transform: rotate(${rotation}deg)"></div>
+        ${hasHighlight ? `<div class="absolute top-1 left-1 w-3 h-2 bg-gray-400/50 dark:bg-gray-500/50 rounded-full"></div>` : ''}
+      </div>
+    `;
+    
+    document.getElementById('rocksContainer').appendChild(rock);
+    this.rocks.push({ element: rock, x: xPosition });
+  }
+  
+  renderCompanyLogos() {
+    const container = document.getElementById('companyLogos');
+    if (!container) {
+      console.error('companyLogos container not found!');
+      return;
+    }
+    const worldWidth = container.offsetWidth;
+    console.log('Rendering company logos, worldWidth:', worldWidth);
+    
+    // Space logos evenly across the world
+    const spacing = worldWidth / (this.milestones.length + 1);
+    
+    this.milestones.forEach((milestone, index) => {
+      const logoContainer = document.createElement('div');
+      logoContainer.className = 'absolute';
+      logoContainer.style.left = `${spacing * (index + 1) - 90}px`; // Center the card
+      logoContainer.style.bottom = '0';
+      
+      if (milestone.logo) {
+        logoContainer.innerHTML = `
+          <div class="group relative" id="logo-${index}">
+            <!-- Card with shadow and border -->
+            <div class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 shadow-2xl border-4 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:scale-110 hover:shadow-3xl w-40 h-40 flex flex-col items-center justify-center">
+              <!-- Logo -->
+              <div class="w-24 h-24 mb-2 flex items-center justify-center">
+                <img src="${milestone.logo}" alt="${milestone.company}" class="max-w-full max-h-full object-contain">
+              </div>
+              <!-- Company name -->
+              <div class="text-xs font-bold text-gray-900 dark:text-white text-center mt-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                ${milestone.company}
+              </div>
+            </div>
+            <!-- Glow effect on hover -->
+            <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300 -z-10"></div>
+          </div>
+        `;
+      } else {
+        logoContainer.innerHTML = `
+          <div class="group relative" id="logo-${index}">
+            <div class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 shadow-2xl border-4 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:scale-110 hover:shadow-3xl w-40 h-40 flex items-center justify-center">
+              <div class="text-sm font-bold text-gray-900 dark:text-white text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">${milestone.company}</div>
+            </div>
+            <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300 -z-10"></div>
+          </div>
+        `;
+      }
+      
+      // Store world position for each milestone
+      milestone.worldX = spacing * (index + 1);
+      
+      container.appendChild(logoContainer);
+    });
+    console.log('Company logos rendered');
+  }
+  
+  renderTimelinePoints() {
+    const container = document.getElementById('timelinePoints');
+    const worldWidth = container.offsetWidth;
+    
+    // Space points evenly to match logos
+    const spacing = worldWidth / (this.milestones.length + 1);
+    
+    this.milestones.forEach((milestone, index) => {
+      // Store world position for each milestone
+      milestone.worldX = spacing * (index + 1);
+      
+      const point = document.createElement('div');
+      point.className = 'absolute';
+      point.style.left = `${spacing * (index + 1)}px`;
+      
+      point.innerHTML = `
+        <div class="relative group cursor-pointer">
+          <div class="w-4 h-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mx-auto mb-1 border-3 border-white dark:border-gray-700 shadow-xl transition-all group-hover:scale-150 group-hover:rotate-180 duration-300" id="point-${index}"></div>
+          <div class="absolute -top-20 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 px-4 py-3 rounded-xl text-xs font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-2xl border-2 border-gray-200 dark:border-gray-700 min-w-[200px] z-50">
+            <div class="font-bold text-gray-900 dark:text-white">${milestone.title}</div>
+            <div class="text-[10px] text-gray-600 dark:text-gray-400 mt-1 flex items-center justify-center gap-1">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              ${milestone.location}
+            </div>
+            <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-3 h-3 bg-white dark:bg-gray-800 border-r-2 border-b-2 border-gray-200 dark:border-gray-700"></div>
+          </div>
+          <div class="text-xs font-bold text-gray-900 dark:text-white bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-2 py-1 rounded-full shadow-md">${milestone.year}</div>
+        </div>
+      `;
+      
+      container.appendChild(point);
+    });
+  }
+  
+  setupControls() {
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const speedBtn = document.getElementById('speedBtn');
+    
+    startBtn.addEventListener('click', () => {
+      if (this.currentMilestone < this.milestones.length) {
+        this.goToNextMilestone();
+        // Update button text after first click
+        if (this.currentMilestone === 1) {
+          startBtn.innerHTML = `
+            <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+            </svg>
+            Continue Journey
+          `;
+        }
+      } else {
+        // Journey complete, reset on next click
+        this.reset();
+        this.goToNextMilestone();
+      }
+    });
+    
+    resetBtn.addEventListener('click', () => {
+      this.reset();
+      // Reset button text back to "Start Journey"
+      startBtn.innerHTML = `
+        <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+        </svg>
+        Start Journey
+      `;
+    });
+    
+    speedBtn.addEventListener('click', () => {
+      this.currentSpeed = (this.currentSpeed + 1) % this.speeds.length;
+      const speed = this.speeds[this.currentSpeed];
+      document.getElementById('speedText').textContent = `Speed: ${speed.name}`;
+    });
+  }
+  
+  goToNextMilestone() {
+    if (this.currentMilestone < this.milestones.length) {
+      const milestone = this.milestones[this.currentMilestone];
+      console.log('Going to milestone:', milestone.title);
+      
+      // Start animations
+      this.isScrolling = true;
+      this.journeyStartTime = Date.now();
+      this.journeyDuration = 3000 / this.speeds[this.currentSpeed].value; // 3 seconds base duration
+      
+      // Start character walking animation
+      this.character.startWalking();
+      
+      this.currentMilestone++;
+    }
+  }
+  
+  updateProgress() {
+    const progressBar = document.getElementById('progressBar');
+    const progress = (this.currentMilestone / this.milestones.length) * 100;
+    progressBar.style.width = progress + '%';
+  }
+  
+  highlightEvent(index) {
+    const milestone = this.milestones[index];
+    
+    // Highlight the point with a permanent green color
+    const point = document.getElementById(`point-${index}`);
+    if (point) {
+      point.classList.remove('from-yellow-400', 'to-orange-500');
+      point.classList.add('from-green-400', 'to-emerald-500', 'scale-125', 'ring-4', 'ring-green-300');
+      setTimeout(() => {
+        point.classList.remove('scale-125');
+      }, 500);
+    }
+    
+    // Highlight the logo
+    const logo = document.getElementById(`logo-${index}`);
+    if (logo) {
+      logo.classList.add('ring-4', 'ring-green-400', 'scale-110');
+    }
+    
+    console.log(`Reached milestone: ${milestone.title}`);
+  }
+  
+  reset() {
+    this.character.standStill();
+    this.currentMilestone = 0;
+    this.isScrolling = false;
+    this.totalDistance = 0;
+    this.nextCloudX = 0;
+    this.nextTreeX = 0;
+    this.nextRockX = 0;
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = '0%';
+    
+    // Remove all dynamically generated elements
+    this.clouds.forEach(cloud => cloud.element.remove());
+    this.clouds = [];
+    
+    this.trees.forEach(tree => tree.element.remove());
+    this.trees = [];
+    
+    this.rocks.forEach(rock => rock.element.remove());
+    this.rocks = [];
+    
+    // Respawn initial elements
+    this.spawnInitialElements();
+    
+    // Reset timeline points
+    const points = document.querySelectorAll('#timelinePoints > div');
+    points.forEach(point => {
+      point.style.transform = 'translateX(0px)';
+    });
+    
+    // Reset all milestone points
+    this.milestones.forEach((_, index) => {
+      const point = document.getElementById(`point-${index}`);
+      if (point) {
+        point.classList.remove('bg-green-500', 'from-green-400', 'to-emerald-500', 'ring-4', 'ring-green-300');
+        point.classList.add('from-yellow-400', 'to-orange-500');
+      }
+    });
+  }
+  
+  animate() {
+    this.character.update();
+    
+    if (this.isScrolling) {
+      this.updateInfiniteElements();
+    }
+    
+    requestAnimationFrame(() => this.animate());
+  }
+  
+  updateInfiniteElements() {
+    // Check if journey is complete
+    const elapsed = Date.now() - this.journeyStartTime;
+    if (elapsed >= this.journeyDuration) {
+      this.isScrolling = false;
+      this.character.stopWalking();
+      this.highlightEvent(this.currentMilestone - 1);
+      this.updateProgress();
+      return;
+    }
+    
+    const speed = this.speeds[this.currentSpeed].value * 5;
+    this.totalDistance += speed;
+    const containerWidth = this.gameContainer.offsetWidth;
+    
+    // Move and clean up clouds
+    for (let i = this.clouds.length - 1; i >= 0; i--) {
+      const cloud = this.clouds[i];
+      cloud.x -= speed * 0.3; // Slower for parallax
+      cloud.element.style.left = cloud.x + 'px';
+      
+      // Remove if off screen
+      if (cloud.x < -100) {
+        cloud.element.remove();
+        this.clouds.splice(i, 1);
+      }
+    }
+    
+    // Move and clean up trees
+    for (let i = this.trees.length - 1; i >= 0; i--) {
+      const tree = this.trees[i];
+      tree.x -= speed;
+      tree.element.style.left = tree.x + 'px';
+      
+      // Remove if off screen
+      if (tree.x < -100) {
+        tree.element.remove();
+        this.trees.splice(i, 1);
+      }
+    }
+    
+    // Spawn new clouds (max 5 on screen)
+    if (this.clouds.length < 5) {
+      const spawnX = containerWidth + 100;
+      if (this.totalDistance > this.nextCloudX) {
+        this.createCloud(spawnX);
+        this.nextCloudX = this.totalDistance + 300 + Math.random() * 500;
+      }
+    }
+    
+    // Spawn new trees (max 2 on screen)
+    if (this.trees.length < 2) {
+      // Spawn trees from the right edge of the screen
+      const spawnX = containerWidth + 100;
+      if (this.totalDistance > this.nextTreeX) {
+        this.createTree(spawnX);
+        this.nextTreeX = this.totalDistance + 600 + Math.random() * 800;
+      }
+    }
+    
+    // Move and clean up rocks
+    for (let i = this.rocks.length - 1; i >= 0; i--) {
+      const rock = this.rocks[i];
+      rock.x -= speed;
+      rock.element.style.left = rock.x + 'px';
+      
+      // Remove if off screen
+      if (rock.x < -50) {
+        rock.element.remove();
+        this.rocks.splice(i, 1);
+      }
+    }
+    
+    // Spawn new rocks (max 4 on screen)
+    if (this.rocks.length < 4) {
+      const spawnX = containerWidth + 50;
+      if (this.totalDistance > this.nextRockX) {
+        this.createRock(spawnX);
+        this.nextRockX = this.totalDistance + 200 + Math.random() * 400;
+      }
+    }
+  }
+
+}
+
+// Initialize when page loads
+window.addEventListener('load', () => {
+  const timeline = new Timeline();
+});

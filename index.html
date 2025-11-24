@@ -5,20 +5,28 @@ layout: default
 <!-- Hero Section -->
 <section class="bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-gray-800 dark:to-gray-900 py-20">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center">
-      <h1 class="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-        Hi, I'm {{ site.title }} 👋
-      </h1>
-      <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-        {{ site.description }}
-      </p>
-      <div class="flex flex-wrap justify-center gap-4">
-        <a href="/projects" class="btn-primary">
-          View My Work
-        </a>
-        <a href="/about" class="btn-outline">
-          About Me
-        </a>
+    <div class="flex flex-col lg:flex-row items-center gap-12">
+      <!-- Hero Text -->
+      <div class="flex-1 text-center lg:text-left">
+        <h1 class="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+          Hi, I'm {{ site.title }} 👋
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8">
+          {{ site.description }}
+        </p>
+        <div class="flex flex-wrap justify-center lg:justify-start gap-4">
+          <a href="/projects" class="btn-primary">
+            View My Work
+          </a>
+          <a href="/about" class="btn-outline">
+            About Me
+          </a>
+        </div>
+      </div>
+      
+      <!-- Hero Image -->
+      <div class="flex-1 flex justify-center lg:justify-end">
+        <img src="/assets/hero.png" alt="{{ site.title }}" class="rounded-2xl max-w-md w-full object-cover">
       </div>
     </div>
   </div>

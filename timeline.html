@@ -1,0 +1,127 @@
+---
+layout: default
+title: Timeline
+---
+
+<link rel="stylesheet" href="/assets/css/timeline.css">
+<script src="/assets/js/timeline.js" defer></script>
+
+<!-- Hero Section -->
+<section class="relative py-20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-900 dark:via-purple-900 dark:to-pink-900 overflow-hidden">
+  <!-- Animated Background Elements -->
+  <div class="absolute inset-0 opacity-20">
+    <div class="absolute top-10 left-10 w-72 h-72 bg-white rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+    <div class="absolute top-20 right-10 w-72 h-72 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+    <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+  </div>
+  
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div class="inline-block mb-4 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white font-semibold text-sm animate-pulse">
+      🎮 Interactive Career Journey
+    </div>
+    <h1 class="text-5xl md:text-7xl font-extrabold text-white mb-6 drop-shadow-2xl">
+      My Journey
+    </h1>
+    <p class="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto font-medium">
+      Watch my 8-bit character walk through the timeline of my career
+    </p>
+    <div class="flex justify-center gap-2 text-white/80 text-sm">
+      <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full">8 Positions</span>
+      <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full">5+ Years</span>
+      <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full">4 Countries</span>
+    </div>
+  </div>
+</section>
+
+<!-- Main Timeline Section -->
+<section class="py-16 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Animation Container -->
+    <div id="gameContainer" class="relative bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-indigo-200 dark:border-indigo-800" style="height: 500px;">
+      <!-- Decorative Background Pattern -->
+      <div class="absolute inset-0 opacity-5">
+        <div class="absolute inset-0" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,0,0,.1) 35px, rgba(0,0,0,.1) 70px);"></div>
+      </div>
+      
+      <!-- Scrolling World Container -->
+      <div id="worldContainer" class="absolute inset-0">
+        <!-- Sky Background (static) -->
+        <div class="absolute top-0 left-0 w-full h-3/4 bg-gradient-to-b from-sky-200 to-sky-100 dark:from-sky-900 dark:to-sky-800" style="z-index: 1;"></div>
+        
+        <!-- Ground/Grass (static) -->
+        <div class="absolute bottom-0 left-0 w-full h-1/4 bg-gradient-to-b from-green-400 to-green-600 dark:from-green-700 dark:to-green-900" style="z-index: 1;"></div>
+        
+        <!-- Dynamic element containers -->
+        <div id="cloudsContainer" class="absolute top-0 left-0 w-full h-3/4" style="z-index: 2;"></div>
+        <div id="rocksContainer" class="absolute bottom-[25%] left-0 w-full" style="z-index: 4;"></div>
+        <div id="treesContainer" class="absolute bottom-[25%] left-0 w-full" style="z-index: 5;"></div>
+        
+        <!-- Walking Path -->
+        <div class="absolute left-0 h-3 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 dark:from-amber-800 dark:via-amber-700 dark:to-amber-800 shadow-lg" style="bottom: calc(25% - 1rem); width: 100%; z-index: 3;"></div>
+        <div class="absolute left-0 h-1 bg-amber-700/50 dark:bg-amber-900/50" style="bottom: calc(25% - 1.5rem); width: 100%; z-index: 3;"></div>
+        
+        <!-- Timeline Points -->
+        <div id="timelinePoints" class="absolute" style="bottom: calc(25% + 2rem); left: 0; width: 100%;">
+          <!-- Timeline milestones will be generated here -->
+        </div>
+      </div>
+      
+      <!-- Character Canvas (Fixed Position) -->
+      <canvas id="characterCanvas" class="absolute z-30" style="bottom: calc(25% - 0.5rem); left: 30%;"></canvas>
+      
+      <!-- Progress Bar -->
+      <div class="absolute top-4 left-4 right-4 z-30">
+        <div class="bg-white/30 dark:bg-gray-700/30 backdrop-blur-sm rounded-full h-3 overflow-hidden shadow-inner">
+          <div id="progressBar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex flex-wrap justify-center gap-4 mt-8">
+      <button id="startBtn" class="group relative px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2">
+        <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+        </svg>
+        Start Journey
+      </button>
+      <button id="resetBtn" class="px-8 py-4 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-200 border-2 border-gray-300 dark:border-gray-600 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Reset
+      </button>
+      <button id="speedBtn" class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        <span id="speedText">Speed: Normal</span>
+      </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+      <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all duration-300">
+        <div class="text-4xl mb-2">🚀</div>
+        <div class="text-3xl font-bold mb-1">8+</div>
+        <div class="text-blue-100 font-medium">Career Positions</div>
+      </div>
+      <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all duration-300">
+        <div class="text-4xl mb-2">🌍</div>
+        <div class="text-3xl font-bold mb-1">4</div>
+        <div class="text-purple-100 font-medium">Countries Worked</div>
+      </div>
+      <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-6 text-white shadow-xl transform hover:scale-105 transition-all duration-300">
+        <div class="text-4xl mb-2">💼</div>
+        <div class="text-3xl font-bold mb-1">5+</div>
+        <div class="text-pink-100 font-medium">Years Experience</div>
+      </div>
+    </div>
+
+    <!-- Timeline Events -->
+    <div class="mt-16" id="timelineEvents">
+      <!-- Events will be populated here -->
+    </div>
+  </div>
+</section>
