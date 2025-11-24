@@ -17,6 +17,11 @@
   100% { transform: translateY(0px); }
 }
 
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
 .animate-blob {
   animation: blob 7s infinite;
 }

@@ -4,6 +4,23 @@ title: Timeline
 ---
 
 <link rel="stylesheet" href="/assets/css/timeline.css">
+
+<!-- Inject timeline data from Jekyll -->
+<script>
+  window.timelineData = [
+    {% for milestone in site.data.timeline %}
+    {
+      year: "{{ milestone.year }}",
+      title: "{{ milestone.title }}",
+      position: {{ forloop.index }},
+      location: "{{ milestone.location }}",
+      logo: {% if milestone.logo %}"{{ milestone.logo }}"{% else %}null{% endif %},
+      company: "{{ milestone.company }}"
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ];
+</script>
+
 <script src="/assets/js/timeline.js" defer></script>
 
 <!-- Hero Section -->
@@ -56,13 +73,14 @@ title: Timeline
         <div id="cloudsContainer" class="absolute top-0 left-0 w-full h-3/4" style="z-index: 2;"></div>
         <div id="rocksContainer" class="absolute bottom-[25%] left-0 w-full" style="z-index: 4;"></div>
         <div id="treesContainer" class="absolute bottom-[25%] left-0 w-full" style="z-index: 5;"></div>
+        <div id="jobCardsContainer" class="absolute bottom-[25%] left-0 w-full" style="z-index: 6;"></div>
         
         <!-- Walking Path -->
         <div class="absolute left-0 h-3 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 dark:from-amber-800 dark:via-amber-700 dark:to-amber-800 shadow-lg" style="bottom: calc(25% - 1rem); width: 100%; z-index: 3;"></div>
         <div class="absolute left-0 h-1 bg-amber-700/50 dark:bg-amber-900/50" style="bottom: calc(25% - 1.5rem); width: 100%; z-index: 3;"></div>
         
         <!-- Timeline Points -->
-        <div id="timelinePoints" class="absolute" style="bottom: calc(25% + 2rem); left: 0; width: 100%;">
+        <div id="timelinePoints" class="absolute" style="bottom: calc(25% + 2rem); left: 0; width: 100%; display: None">
           <!-- Timeline milestones will be generated here -->
         </div>
       </div>

@@ -9,13 +9,13 @@ class SpriteCharacter {
       '/assets/timeline/walking/standing.png',
       '/assets/timeline/walking/walkin_1.png',
       '/assets/timeline/walking/walking_2.png',
-      '/assets/timeline/walking/walking_3.png'
+      '/assets/timeline/walking/walking_3.png',
     ];
     this.images = [];
     this.imagesLoaded = 0;
     
     // Animation configuration
-    this.scale = 1;         // Scale up the character
+    this.scale = 1;         // Scale the character
     this.currentFrame = 0;
     this.frameDelay = 5;    // Frames to wait before switching sprite
     this.frameCounter = 0;
@@ -119,72 +119,14 @@ class SpriteCharacter {
 class Timeline {
   constructor() {
     this.character = new SpriteCharacter('characterCanvas', '/assets/timeline/walking_sprites.png');
-    this.milestones = [
-      { 
-        year: '2019', 
-        title: 'RT-RK - Automotive Software Engineer', 
-        position: 10, 
-        location: 'Novi Sad',
-        logo: '/assets/timeline/companies/rtrk_logo.jpg',
-        company: 'RT-RK'
-      },
-      { 
-        year: '2020', 
-        title: 'Aerwave - Platform Development Lead', 
-        position: 22, 
-        location: 'Dallas, TX',
-        logo: '/assets/timeline/companies/aerwave_logo.jpeg',
-        company: 'Aerwave'
-      },
-      { 
-        year: '2020', 
-        title: 'Clear Moon - CTO', 
-        position: 34, 
-        location: 'Miami, FL',
-        logo: '/assets/timeline/companies/clear_moon_logo.jpeg',
-        company: 'Clear Moon'
-      },
-      { 
-        year: '2021', 
-        title: 'Vay - Automotive Software Developer', 
-        position: 46, 
-        location: 'Berlin',
-        logo: '/assets/timeline/companies/vay_logo.png',
-        company: 'Vay'
-      },
-      { 
-        year: '2023', 
-        title: 'Aerwave - Technical Development Lead', 
-        position: 58, 
-        location: 'Dallas, TX',
-        logo: '/assets/timeline/companies/aerwave_logo.jpeg',
-        company: 'Aerwave'
-      },
-      { 
-        year: '2023', 
-        title: 'Clouddle - Technical Development Lead', 
-        position: 70, 
-        location: 'Florida',
-        logo: '/assets/timeline/companies/clouddle_logo.png',
-        company: 'Clouddle'
-      },
-      { 
-        year: '2024', 
-        title: 'Adapptiv - Senior Software Engineer', 
-        position: 82, 
-        location: 'London (Remote)',
-        logo: null,
-        company: 'Adapptiv'
-      },
-      { 
-        year: '2024', 
-        title: 'symphony.is - Senior Software Engineer', 
-        position: 94, 
-        location: 'Niš',
-        logo: '/assets/timeline/companies/symphony_logo.png',
-        company: 'symphony.is'
-      }
-    ];
+    
+    // Use injected data from Jekyll, or fall back to empty array
+    this.milestones = window.timelineData || [];
+    
+    if (this.milestones.length === 0) {
+      console.error('No timeline data found! Make sure window.timelineData is defined.');
+    }
+    
     this.currentMilestone = 0;
     this.speeds = [
       { name: 'Slow', value: 0.5 },
@@ -203,10 +145,15 @@ class Timeline {
     this.clouds = [];
     this.trees = [];
     this.rocks = [];
+    this.jobCards = [];
     this.totalDistance = 0;
     this.nextCloudX = 0;
     this.nextTreeX = 0;
     this.nextRockX = 0;
+    
+    // Job card physics
+    this.currentJobCard = null;
+    this.characterPositionPercent = 30; // Character is at 30% from left
     
     this.init();
   }
@@ -322,59 +269,84 @@ class Timeline {
     this.rocks.push({ element: rock, x: xPosition });
   }
   
-  renderCompanyLogos() {
-    const container = document.getElementById('companyLogos');
-    if (!container) {
-      console.error('companyLogos container not found!');
-      return;
-    }
-    const worldWidth = container.offsetWidth;
-    console.log('Rendering company logos, worldWidth:', worldWidth);
+  createJobCard(milestone, xPosition) {
+    const card = document.createElement('div');
+    card.className = 'job-card absolute';
+    card.style.left = xPosition + 'px';
+    card.style.bottom = '40px';
+    card.style.zIndex = '6';
+    card.style.imageRendering = 'pixelated';
     
-    // Space logos evenly across the world
-    const spacing = worldWidth / (this.milestones.length + 1);
+    // Create 8-bit style card
+    card.innerHTML = `
+      <div class="relative" style="width: 280px; animation: cardFloat 3s ease-in-out infinite;">
+        <!-- 8-bit border frame -->
+        <div class="absolute inset-0 bg-gray-900 dark:bg-gray-100" style="clip-path: polygon(
+          0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+          100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%,
+          8px calc(100% - 8px), 0 calc(100% - 8px)
+        );"></div>
+        
+        <!-- Inner content -->
+        <div class="relative bg-white dark:bg-gray-800 m-2 p-4" style="
+          clip-path: polygon(
+            0 6px, 6px 6px, 6px 0, calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px,
+            100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%,
+            6px calc(100% - 6px), 0 calc(100% - 6px)
+          );
+          box-shadow: inset 4px 4px 0 rgba(0,0,0,0.2), inset -4px -4px 0 rgba(255,255,255,0.1);
+        ">
+          <!-- Logo/Icon section -->
+          <div class="flex items-start gap-3 mb-3">
+            ${milestone.logo ? `
+              <img src="${milestone.logo}" alt="${milestone.company}" 
+                class="w-12 h-12 object-cover border-2 border-gray-900 dark:border-gray-100" 
+                style="image-rendering: pixelated; image-rendering: crisp-edges;" />
+            ` : `
+              <div class="w-12 h-12 bg-indigo-600 border-2 border-gray-900 dark:border-gray-100 flex items-center justify-center">
+                <span class="text-white text-xl font-bold" style="font-family: 'Courier New', monospace;">${milestone.company.charAt(0)}</span>
+              </div>
+            `}
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-yellow-500 mb-1" style="font-family: 'Courier New', monospace; text-shadow: 2px 2px 0 rgba(0,0,0,0.3);">${milestone.year}</div>
+              <div class="text-sm font-bold text-gray-900 dark:text-white truncate" style="font-family: 'Courier New', monospace;">${milestone.company}</div>
+            </div>
+          </div>
+          
+          <!-- Job title with 8-bit style -->
+          <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 leading-tight" style="font-family: 'Courier New', monospace;">
+            ${milestone.title}
+          </div>
+          
+          <!-- Location with pixel icon -->
+          <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" style="font-family: 'Courier New', monospace;">
+            <span style="display: inline-block; width: 8px; height: 8px; background: currentColor;"></span>
+            <span class="truncate">${milestone.location}</span>
+          </div>
+          
+          <!-- 8-bit corner decorations -->
+          <div class="absolute top-1 left-1 w-2 h-2 bg-yellow-400"></div>
+          <div class="absolute top-1 right-1 w-2 h-2 bg-yellow-400"></div>
+          <div class="absolute bottom-1 left-1 w-2 h-2 bg-yellow-400"></div>
+          <div class="absolute bottom-1 right-1 w-2 h-2 bg-yellow-400"></div>
+        </div>
+      </div>
+    `;
     
-    this.milestones.forEach((milestone, index) => {
-      const logoContainer = document.createElement('div');
-      logoContainer.className = 'absolute';
-      logoContainer.style.left = `${spacing * (index + 1) - 90}px`; // Center the card
-      logoContainer.style.bottom = '0';
-      
-      if (milestone.logo) {
-        logoContainer.innerHTML = `
-          <div class="group relative" id="logo-${index}">
-            <!-- Card with shadow and border -->
-            <div class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 shadow-2xl border-4 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:scale-110 hover:shadow-3xl w-40 h-40 flex flex-col items-center justify-center">
-              <!-- Logo -->
-              <div class="w-24 h-24 mb-2 flex items-center justify-center">
-                <img src="${milestone.logo}" alt="${milestone.company}" class="max-w-full max-h-full object-contain">
-              </div>
-              <!-- Company name -->
-              <div class="text-xs font-bold text-gray-900 dark:text-white text-center mt-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                ${milestone.company}
-              </div>
-            </div>
-            <!-- Glow effect on hover -->
-            <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300 -z-10"></div>
-          </div>
-        `;
-      } else {
-        logoContainer.innerHTML = `
-          <div class="group relative" id="logo-${index}">
-            <div class="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 shadow-2xl border-4 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:scale-110 hover:shadow-3xl w-40 h-40 flex items-center justify-center">
-              <div class="text-sm font-bold text-gray-900 dark:text-white text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">${milestone.company}</div>
-            </div>
-            <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300 -z-10"></div>
-          </div>
-        `;
-      }
-      
-      // Store world position for each milestone
-      milestone.worldX = spacing * (index + 1);
-      
-      container.appendChild(logoContainer);
-    });
-    console.log('Company logos rendered');
+    document.getElementById('jobCardsContainer').appendChild(card);
+    
+    // Physics properties
+    return { 
+      element: card, 
+      x: xPosition, 
+      velocity: 0,
+      acceleration: -0.5, // Negative to move left
+      maxVelocity: -8,
+      friction: 0.98,
+      targetX: null,
+      isDecelerating: false,
+      milestone: milestone 
+    };
   }
   
   renderTimelinePoints() {
@@ -461,6 +433,11 @@ class Timeline {
       const milestone = this.milestones[this.currentMilestone];
       console.log('Going to milestone:', milestone.title);
       
+      // Spawn the job card from the right side
+      const containerWidth = this.gameContainer.offsetWidth;
+      this.currentJobCard = this.createJobCard(milestone, containerWidth + 100);
+      this.jobCards.push(this.currentJobCard);
+      
       // Start animations
       this.isScrolling = true;
       this.journeyStartTime = Date.now();
@@ -490,12 +467,6 @@ class Timeline {
       setTimeout(() => {
         point.classList.remove('scale-125');
       }, 500);
-    }
-    
-    // Highlight the logo
-    const logo = document.getElementById(`logo-${index}`);
-    if (logo) {
-      logo.classList.add('ring-4', 'ring-green-400', 'scale-110');
     }
     
     console.log(`Reached milestone: ${milestone.title}`);
@@ -544,6 +515,11 @@ class Timeline {
   animate() {
     this.character.update();
     
+    // Update job card physics
+    if (this.currentJobCard) {
+      this.updateJobCardPhysics();
+    }
+    
     if (this.isScrolling) {
       this.updateInfiniteElements();
     }
@@ -551,17 +527,56 @@ class Timeline {
     requestAnimationFrame(() => this.animate());
   }
   
-  updateInfiniteElements() {
-    // Check if journey is complete
-    const elapsed = Date.now() - this.journeyStartTime;
-    if (elapsed >= this.journeyDuration) {
-      this.isScrolling = false;
-      this.character.stopWalking();
-      this.highlightEvent(this.currentMilestone - 1);
-      this.updateProgress();
-      return;
+  updateJobCardPhysics() {
+    const card = this.currentJobCard;
+    const containerWidth = this.gameContainer.offsetWidth;
+    const characterX = containerWidth * (this.characterPositionPercent / 100);
+    const cardWidth = 300;
+    
+    // Calculate distance to character
+    const distanceToCharacter = card.x - characterX;
+    const stoppingDistance = cardWidth + 50; // Stop when card is near character
+    
+    // Deceleration logic: start slowing down when approaching character
+    if (distanceToCharacter < stoppingDistance * 2 && !card.isDecelerating) {
+      card.isDecelerating = true;
+      card.targetX = characterX + cardWidth + 20; // Target position next to character
     }
     
+    if (card.isDecelerating) {
+      // Smooth deceleration toward target
+      const dx = card.targetX - card.x;
+      const distance = Math.abs(dx);
+      
+      if (distance > 1) {
+        // Ease-out motion: slower as it gets closer
+        card.velocity = dx * 0.08; // Smooth spring-like motion
+        card.x += card.velocity;
+      } else {
+        // Snap to final position and stop
+        card.x = card.targetX;
+        card.velocity = 0;
+        
+        // Stop character and complete milestone
+        this.isScrolling = false;
+        this.character.stopWalking();
+        this.highlightEvent(this.currentMilestone - 1);
+        this.updateProgress();
+        this.currentJobCard = null; // Clear reference
+      }
+    } else {
+      // Acceleration phase: speed up from start
+      if (Math.abs(card.velocity) < Math.abs(card.maxVelocity)) {
+        card.velocity += card.acceleration;
+      }
+      card.x += card.velocity;
+    }
+    
+    // Update DOM
+    card.element.style.left = card.x + 'px';
+  }
+  
+  updateInfiniteElements() {
     const speed = this.speeds[this.currentSpeed].value * 5;
     this.totalDistance += speed;
     const containerWidth = this.gameContainer.offsetWidth;
