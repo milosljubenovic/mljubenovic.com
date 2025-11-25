@@ -364,6 +364,8 @@ class Timeline {
     // Sky color transitions
     this.skyElement = null;
     this.currentSkyColors = { top: '#e0f2fe', bottom: '#bae6fd' }; // Start with dawn
+    this.weatherContainer = null;
+    this.currentWeather = 'clear';
     
     this.init();
   }
@@ -380,6 +382,12 @@ class Timeline {
     this.skyElement = document.getElementById('dynamicSky');
     if (this.skyElement) {
       this.updateSkyColor();
+    }
+    
+    // Initialize weather container
+    this.weatherContainer = document.getElementById('weatherContainer');
+    if (this.weatherContainer) {
+      this.updateWeather();
     }
     
     this.animate();
@@ -1267,6 +1275,182 @@ class Timeline {
     
     // Update sky color based on progress
     this.updateSkyColor();
+    
+    // Update weather based on progress
+    this.updateWeather();
+  }
+  
+  updateWeather() {
+    if (!this.weatherContainer || !this.finishLineDistance) return;
+    
+    // Calculate progress percentage
+    const progress = Math.min(100, (this.manualDistanceTraveled / this.finishLineDistance) * 100);
+    
+    // Determine weather based on progress
+    let newWeather = 'clear';
+    
+    if (progress < 25) {
+      newWeather = 'clear'; // Dawn - clear
+    } else if (progress < 50) {
+      newWeather = 'rain'; // Day - light rain
+    } else if (progress < 75) {
+      newWeather = 'fog'; // Sunset - fog/mist
+    } else {
+      newWeather = 'snow'; // Night - snow
+    }
+    
+    // Only update if weather changed
+    if (newWeather !== this.currentWeather) {
+      this.currentWeather = newWeather;
+      this.applyWeather(newWeather);
+    }
+  }
+  
+  applyWeather(weatherType) {
+    // Fade out existing weather
+    const existingWeather = this.weatherContainer.children;
+    if (existingWeather.length > 0) {
+      Array.from(existingWeather).forEach(element => {
+        element.style.transition = 'opacity 1.5s ease-out';
+        element.style.opacity = '0';
+      });
+      
+      // Remove after fade out
+      setTimeout(() => {
+        this.weatherContainer.innerHTML = '';
+        
+        // Apply new weather
+        switch(weatherType) {
+          case 'rain':
+            this.createRain();
+            break;
+          case 'snow':
+            this.createSnow();
+            break;
+          case 'fog':
+            this.createFog();
+            break;
+          case 'clear':
+          default:
+            // No weather effects
+            break;
+        }
+      }, 1500);
+    } else {
+      // No existing weather, apply immediately
+      switch(weatherType) {
+        case 'rain':
+          this.createRain();
+          break;
+        case 'snow':
+          this.createSnow();
+          break;
+        case 'fog':
+          this.createFog();
+          break;
+        case 'clear':
+        default:
+          // No weather effects
+          break;
+      }
+    }
+  }
+  
+  createRain() {
+    // Create 50 rain drops
+    for (let i = 0; i < 50; i++) {
+      const drop = document.createElement('div');
+      const x = Math.random() * 100;
+      const duration = Math.random() * 0.5 + 0.5; // 0.5-1s
+      const delay = Math.random() * 2;
+      
+      drop.className = 'rain-drop';
+      drop.style.cssText = `
+        position: absolute;
+        left: ${x}%;
+        top: -10px;
+        width: 2px;
+        height: 20px;
+        background: linear-gradient(to bottom, rgba(174, 194, 224, 0.8), rgba(174, 194, 224, 0.2));
+        animation: rainFall ${duration}s linear ${delay}s infinite;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 1.5s ease-in;
+      `;
+      
+      this.weatherContainer.appendChild(drop);
+      
+      // Trigger fade-in
+      setTimeout(() => drop.style.opacity = '1', 10);
+    }
+  }
+  
+  createSnow() {
+    // Create 60 snowflakes
+    for (let i = 0; i < 60; i++) {
+      const flake = document.createElement('div');
+      const x = Math.random() * 100;
+      const size = Math.random() * 4 + 2; // 2-6px
+      const duration = Math.random() * 3 + 2; // 2-5s
+      const delay = Math.random() * 3;
+      const drift = (Math.random() - 0.5) * 50; // -25 to 25px drift
+      
+      flake.className = 'snowflake';
+      flake.style.cssText = `
+        position: absolute;
+        left: ${x}%;
+        top: -10px;
+        width: ${size}px;
+        height: ${size}px;
+        background: white;
+        border-radius: 50%;
+        opacity: 0;
+        animation: snowFall ${duration}s linear ${delay}s infinite;
+        --drift: ${drift}px;
+        pointer-events: none;
+        box-shadow: 0 0 ${size}px rgba(255, 255, 255, 0.5);
+        transition: opacity 1.5s ease-in;
+      `;
+      
+      this.weatherContainer.appendChild(flake);
+      
+      // Trigger fade-in to target opacity of 0.8
+      setTimeout(() => flake.style.opacity = '0.8', 10);
+    }
+  }
+  
+  createFog() {
+    // Create 2 fog layers (reduced from 3 for better performance)
+    for (let i = 0; i < 2; i++) {
+      const fog = document.createElement('div');
+      const delay = i * 7;
+      
+      fog.className = 'fog-layer';
+      fog.style.cssText = `
+        position: absolute;
+        top: ${25 + i * 25}%;
+        left: -100%;
+        width: 200%;
+        height: 120px;
+        background: linear-gradient(to right, 
+          transparent, 
+          rgba(255, 255, 255, 0.25) 30%, 
+          rgba(255, 255, 255, 0.25) 70%, 
+          transparent);
+        animation: fogMove ${20 + i * 8}s linear ${delay}s infinite;
+        pointer-events: none;
+        filter: blur(8px);
+        will-change: transform;
+        transform: translateZ(0);
+        opacity: 0;
+        transition: opacity 2s ease-in;
+      `;
+      
+      this.weatherContainer.appendChild(fog);
+      
+      // Trigger fade-in
+      setTimeout(() => fog.style.opacity = '1', 10);
+    }
   }
   
   updateSkyColor() {

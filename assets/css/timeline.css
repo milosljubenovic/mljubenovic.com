@@ -63,6 +63,39 @@
   }
 }
 
+@keyframes rainFall {
+  0% {
+    top: -10px;
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0.3;
+  }
+}
+
+@keyframes snowFall {
+  0% {
+    top: -10px;
+    transform: translateX(0);
+    opacity: 0.8;
+  }
+  100% {
+    top: 100%;
+    transform: translateX(var(--drift));
+    opacity: 0;
+  }
+}
+
+@keyframes fogMove {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
 .animate-blob {
   animation: blob 7s infinite;
 }
