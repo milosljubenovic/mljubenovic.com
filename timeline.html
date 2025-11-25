@@ -17,7 +17,10 @@ title: Timeline
       logo: {% if milestone.logo %}"{{ milestone.logo }}"{% else %}null{% endif %},
       company: "{{ milestone.company }}",
       description: "{{ milestone.description | default: '' }}",
-      techstack: [{% for tech in milestone.techstack %}"{{ tech }}"{% unless forloop.last %}, {% endunless %}{% endfor %}]
+      techstack: [{% for tech in milestone.techstack %}"{{ tech }}"{% unless forloop.last %}, {% endunless %}{% endfor %}],
+      isPointOfInterest: {% if milestone.isPointOfInterest %}{{ milestone.isPointOfInterest }}{% else %}false{% endif %},
+      pointOfInterestImage: {% if milestone.pointOfInterestImage %}"{{ milestone.pointOfInterestImage }}"{% else %}null{% endif %},
+      pointOfInterestImages: {% if milestone.pointOfInterestImages %}[{% for img in milestone.pointOfInterestImages %}"{{ img }}"{% unless forloop.last %}, {% endunless %}{% endfor %}]{% else %}null{% endif %}
     }{% unless forloop.last %},{% endunless %}
     {% endfor %}
   ];

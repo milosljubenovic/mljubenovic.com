@@ -222,6 +222,11 @@ class SpriteCharacter {
       if (this.frameCounter >= this.frameDelay) {
         this.frameCounter = 0;
         this.currentFrame = (this.currentFrame + 1) % frames.length;
+        
+        // Play walk sound every 3rd frame change when walking
+        if (this.currentState === 'walking' && this.onWalkStep) {
+          this.onWalkStep();
+        }
       }
       this.draw();
     }
@@ -285,6 +290,14 @@ class Timeline {
   constructor() {
     this.character = new SpriteCharacter('characterCanvas', '/assets/timeline/walking_sprites.png');
     
+    // Set up walk step callback for sound
+    this.character.onWalkStep = () => {
+      this.walkStepCounter++;
+      if (this.walkStepCounter % 3 === 0) {
+        this.playSound('walk');
+      }
+    };
+    
     // Use injected data from Jekyll, or fall back to empty array
     this.milestones = window.timelineData || [];
     
@@ -334,6 +347,16 @@ class Timeline {
     this.isShowingAnimation = false;
     this.showingAnimationTimer = null;
     
+    // Sound effects
+    this.sounds = {
+      walk: new Audio('/assets/timeline/sounds/walk.wav'),
+      jump: new Audio('/assets/timeline/sounds/jump.wav'),
+      pickupCoin: new Audio('/assets/timeline/sounds/pickupCoin.wav'),
+      powerUp: new Audio('/assets/timeline/sounds/powerUp.wav')
+    };
+    this.walkStepCounter = 0; // Track steps for walk sound
+    this.soundMuted = true; // Sound toggle state (muted by default)
+    
     this.init();
   }
   
@@ -347,6 +370,12 @@ class Timeline {
     this.animate();
     console.log('Timeline initialized with', this.milestones.length, 'milestones');
     
+    // Set initial sound icon to muted
+    const soundIcon = document.getElementById('sound-icon');
+    if (soundIcon) {
+      soundIcon.textContent = '🔇';
+    }
+    
     // Spawn initial dynamic elements
     this.spawnInitialElements();
     
@@ -358,6 +387,16 @@ class Timeline {
     
     // Create quest panel
     this.createQuestPanel();
+  }
+  
+  playSound(soundName) {
+    if (this.soundMuted || !this.sounds[soundName]) {
+      return;
+    }
+    // Clone the audio to allow overlapping sounds
+    const sound = this.sounds[soundName].cloneNode();
+    sound.volume = 0.3; // Set volume to 30%
+    sound.play().catch(e => console.log('Sound play failed:', e));
   }
   
   createQuestPanel() {
@@ -487,6 +526,7 @@ class Timeline {
         this.isJumping = true;
         this.isSquatting = false;
         this.character.startJumping();
+        this.playSound('jump');
       } else if (action === 'up-release') {
         this.isJumping = false;
         // Return to walking or standing based on movement
@@ -634,65 +674,96 @@ class Timeline {
     const card = document.createElement('div');
     card.className = 'job-card absolute cursor-pointer';
     card.style.left = xPosition + 'px';
-    card.style.bottom = '40px';
+    card.style.bottom = milestone.isPointOfInterest ? '-30px' : '40px';
     card.style.zIndex = '6';
     card.style.imageRendering = 'pixelated';
     
-    // Create 8-bit style card
-    card.innerHTML = `
-      <div class="relative" style="width: 280px; animation: cardFloat 3s ease-in-out infinite;">
-        <!-- 8-bit border frame -->
-        <div class="absolute inset-0 bg-gray-900 dark:bg-gray-100" style="clip-path: polygon(
-          0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
-          100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%,
-          8px calc(100% - 8px), 0 calc(100% - 8px)
-        );"></div>
+    // Check if this is a point of interest (show image instead of card)
+    if (milestone.isPointOfInterest && (milestone.pointOfInterestImage || milestone.pointOfInterestImages)) {
+      // Determine image height - interns get 200px, life events get 100px
+      const isInterns = milestone.pointOfInterestImage && milestone.pointOfInterestImage.includes('interns');
+      const imageHeight = isInterns ? '200px' : '100px';
+      
+      // Handle multiple images
+      if (milestone.pointOfInterestImages && milestone.pointOfInterestImages.length > 0) {
+        const imagesHtml = milestone.pointOfInterestImages.map(imgSrc => 
+          `<img src="${imgSrc}" alt="${milestone.title}" 
+            class="max-w-none" 
+            style="height: ${imageHeight}; width: auto; image-rendering: pixelated; image-rendering: crisp-edges; image-rendering: -moz-crisp-edges; image-rendering: -webkit-optimize-contrast;" />`
+        ).join('');
         
-        <!-- Inner content -->
-        <div class="relative bg-white dark:bg-gray-800 m-2 p-4" style="
-          clip-path: polygon(
-            0 6px, 6px 6px, 6px 0, calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px,
-            100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%,
-            6px calc(100% - 6px), 0 calc(100% - 6px)
-          );
-          box-shadow: inset 4px 4px 0 rgba(0,0,0,0.2), inset -4px -4px 0 rgba(255,255,255,0.1);
-        ">
-          <!-- Logo/Icon section -->
-          <div class="flex items-start gap-3 mb-3">
-            ${milestone.logo ? `
-              <img src="${milestone.logo}" alt="${milestone.company}" 
-                class="w-12 h-12 object-cover border-2 border-gray-900 dark:border-gray-100" 
-                style="image-rendering: pixelated; image-rendering: crisp-edges;" />
-            ` : `
-              <div class="w-12 h-12 bg-indigo-600 border-2 border-gray-900 dark:border-gray-100 flex items-center justify-center">
-                <span class="text-white text-xl font-bold" style="font-family: 'Courier New', monospace;">${milestone.company.charAt(0)}</span>
+        card.innerHTML = `
+          <div class="relative flex gap-4" style="animation: cardFloat 3s ease-in-out infinite;">
+            ${imagesHtml}
+          </div>
+        `;
+      } else {
+        // Single image
+        card.innerHTML = `
+          <div class="relative" style="animation: cardFloat 3s ease-in-out infinite;">
+            <img src="${milestone.pointOfInterestImage}" alt="${milestone.title}" 
+              class="max-w-none" 
+              style="height: ${imageHeight}; width: auto; image-rendering: pixelated; image-rendering: crisp-edges; image-rendering: -moz-crisp-edges; image-rendering: -webkit-optimize-contrast;" />
+          </div>
+        `;
+      }
+    } else {
+      // Create 8-bit style card
+      card.innerHTML = `
+        <div class="relative" style="width: 280px; animation: cardFloat 3s ease-in-out infinite;">
+          <!-- 8-bit border frame -->
+          <div class="absolute inset-0 bg-gray-900 dark:bg-gray-100" style="clip-path: polygon(
+            0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+            100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%,
+            8px calc(100% - 8px), 0 calc(100% - 8px)
+          );"></div>
+          
+          <!-- Inner content -->
+          <div class="relative bg-white dark:bg-gray-800 m-2 p-4" style="
+            clip-path: polygon(
+              0 6px, 6px 6px, 6px 0, calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px,
+              100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%,
+              6px calc(100% - 6px), 0 calc(100% - 6px)
+            );
+            box-shadow: inset 4px 4px 0 rgba(0,0,0,0.2), inset -4px -4px 0 rgba(255,255,255,0.1);
+          ">
+            <!-- Logo/Icon section -->
+            <div class="flex items-start gap-3 mb-3">
+              ${milestone.logo ? `
+                <img src="${milestone.logo}" alt="${milestone.company}" 
+                  class="w-12 h-12 object-cover border-2 border-gray-900 dark:border-gray-100" 
+                  style="image-rendering: pixelated; image-rendering: crisp-edges;" />
+              ` : `
+                <div class="w-12 h-12 bg-indigo-600 border-2 border-gray-900 dark:border-gray-100 flex items-center justify-center">
+                  <span class="text-white text-xl font-bold" style="font-family: 'Courier New', monospace;">${milestone.company.charAt(0)}</span>
+                </div>
+              `}
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-bold text-yellow-500 mb-1" style="font-family: 'Courier New', monospace; text-shadow: 2px 2px 0 rgba(0,0,0,0.3);">${milestone.year}</div>
+                <div class="text-sm font-bold text-gray-900 dark:text-white truncate" style="font-family: 'Courier New', monospace;">${milestone.company}</div>
               </div>
-            `}
-            <div class="flex-1 min-w-0">
-              <div class="text-xs font-bold text-yellow-500 mb-1" style="font-family: 'Courier New', monospace; text-shadow: 2px 2px 0 rgba(0,0,0,0.3);">${milestone.year}</div>
-              <div class="text-sm font-bold text-gray-900 dark:text-white truncate" style="font-family: 'Courier New', monospace;">${milestone.company}</div>
             </div>
+            
+            <!-- Job title with 8-bit style -->
+            <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 leading-tight" style="font-family: 'Courier New', monospace;">
+              ${milestone.title}
+            </div>
+            
+            <!-- Location with pixel icon -->
+            <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" style="font-family: 'Courier New', monospace;">
+              <span style="display: inline-block; width: 8px; height: 8px; background: currentColor;"></span>
+              <span class="truncate">${milestone.location}</span>
+            </div>
+            
+            <!-- 8-bit corner decorations -->
+            <div class="absolute top-1 left-1 w-2 h-2 bg-yellow-400"></div>
+            <div class="absolute top-1 right-1 w-2 h-2 bg-yellow-400"></div>
+            <div class="absolute bottom-1 left-1 w-2 h-2 bg-yellow-400"></div>
+            <div class="absolute bottom-1 right-1 w-2 h-2 bg-yellow-400"></div>
           </div>
-          
-          <!-- Job title with 8-bit style -->
-          <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 leading-tight" style="font-family: 'Courier New', monospace;">
-            ${milestone.title}
-          </div>
-          
-          <!-- Location with pixel icon -->
-          <div class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" style="font-family: 'Courier New', monospace;">
-            <span style="display: inline-block; width: 8px; height: 8px; background: currentColor;"></span>
-            <span class="truncate">${milestone.location}</span>
-          </div>
-          
-          <!-- 8-bit corner decorations -->
-          <div class="absolute top-1 left-1 w-2 h-2 bg-yellow-400"></div>
-          <div class="absolute top-1 right-1 w-2 h-2 bg-yellow-400"></div>
-          <div class="absolute bottom-1 left-1 w-2 h-2 bg-yellow-400"></div>
-          <div class="absolute bottom-1 right-1 w-2 h-2 bg-yellow-400"></div>
         </div>
-      </div>
-    `;
+      `;
+    }
     
     // Add click handler to show quest details
     card.addEventListener('click', () => {
@@ -1128,6 +1199,14 @@ class Timeline {
           this.visitedMilestones.add(i);
           this.highlightEvent(i);
           
+          // Play appropriate sound based on milestone type
+          const milestone = this.milestones[i];
+          if (milestone.isPointOfInterest) {
+            this.playSound('powerUp');
+          } else {
+            this.playSound('pickupCoin');
+          }
+          
           // Start showing animation when arriving at milestone
           if (!this.isShowingAnimation) {
             this.isShowingAnimation = true;
@@ -1390,6 +1469,16 @@ window.addEventListener('load', () => {
           }
           console.log('Speed decreased to:', speed.name);
         }
+        break;
+        
+      case 'sound-toggle':
+        // Toggle sound on/off
+        timeline.soundMuted = !timeline.soundMuted;
+        const soundIcon = document.getElementById('sound-icon');
+        if (soundIcon) {
+          soundIcon.textContent = timeline.soundMuted ? '🔇' : '🔊';
+        }
+        console.log('Sound', timeline.soundMuted ? 'muted' : 'unmuted');
         break;
         
       case 'forward':

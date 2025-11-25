@@ -1,3 +1,4 @@
+
 - year: "2019"
   title: "RT-RK - Automotive Software Engineer"
   location: "Novi Sad"
@@ -29,6 +30,56 @@
   company: "Vay"
   description: "Developed software for autonomous vehicle systems focusing on remote driving technology."
   techstack: ["C++", "ROS", "Python", "Computer Vision"]
+
+- year: "2022"
+  title: "Life - Married to a Beautiful Girl"
+  location: "❤️"
+  logo: null
+  company: "Life"
+  description: "Being married to super beautiful girl."
+  techstack: ["Love", "Happiness", "Commitment", "Partnership"]
+  isPointOfInterest: true
+  pointOfInterestImage: "/assets/timeline/walking/blondie.png"
+
+- year: "2023"
+  title: "Life - Zulu the Cat"
+  location: "🏠"
+  logo: null
+  company: "Life"
+  description: "First arrival cat, arrived on my birthday."
+  techstack: ["First Cat", "Birthday Gift", "Love", "Companionship"]
+  isPointOfInterest: true
+  pointOfInterestImage: "/assets/timeline/walking/zulu.png"
+
+- year: "2023"
+  title: "Life - Sunny the Cat"
+  location: "🏠"
+  logo: null
+  company: "Life"
+  description: "Well, everyone needs a company, so we got orange one...."
+  techstack: ["Orange Cat", "Companionship", "Joy", "Energy"]
+  isPointOfInterest: true
+  pointOfInterestImage: "/assets/timeline/walking/sunny.png"
+
+- year: "2023"
+  title: "Life - Mili the Cat"
+  location: "🏠"
+  logo: null
+  company: "Life"
+  description: "Mess maker, but a good heart"
+  techstack: ["Mischievous", "Good Heart", "Playful", "Love"]
+  isPointOfInterest: true
+  pointOfInterestImage: "/assets/timeline/walking/mili.png"
+
+- year: "2023"
+  title: "Life - Kali the Cat"
+  location: "🏠"
+  logo: null
+  company: "Life"
+  description: "Looking always serious, but pleasant to have."
+  techstack: ["Serious", "Pleasant", "Calm", "Wisdom"]
+  isPointOfInterest: true
+  pointOfInterestImage: "/assets/timeline/walking/kali.png"
 
 - year: "2023"
   title: "Aerwave - Technical Development Lead"
@@ -62,10 +113,21 @@
   description: "Developed enterprise software solutions with focus on performance and scalability."
   techstack: ["TypeScript", "NestJS", "PostgreSQL", "Redis"]
 
+- year: "2024"
+  title: "symphony.is - Interns Mentorship"
+  location: "Niš"
+  logo: "/assets/timeline/companies/symphony_logo.png"
+  company: "symphony.is"
+  description: "Mentored and guided interns in their professional development, teaching best practices in software engineering."
+  techstack: ["Mentorship", "Team Leadership", "Code Review", "Agile"]
+  isPointOfInterest: true
+  pointOfInterestImage: "/assets/timeline/walking/interns_symphony.png"
+
+
 - year: "2025"
   title: "tide.co - Senior Software Engineer - PDL III"
   location: "London (Remote)"
-  logo: "/assets/timeline/companies/symphony_logo.png"
+  logo: "/assets/timeline/companies/tide_logo.png"
   company: "tide.co"
   description: "Building modern banking infrastructure and financial services platform."
   techstack: ["TypeScript", "React", "AWS", "Microservices", "DDD"]
