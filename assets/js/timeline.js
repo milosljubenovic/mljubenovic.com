@@ -308,7 +308,7 @@ class Timeline {
     this.currentMilestone = 0;
     this.speeds = [
       { name: '0.5x', value: 0.5 },
-      { name: 'Normal', value: 1 },
+      { name: 'Normal', value: 10},
       { name: '2x', value: 2}
     ];
     this.currentSpeed = 2; // Start at Slow (0.15x)
@@ -338,10 +338,12 @@ class Timeline {
     this.visitedMilestones = new Set();
     this.welcomeCard = null;
     this.welcomeCardDismissed = false;
+    this.finishLineCrossed = false;
+    this.confettiContainer = null;
     this.isAutoMoving = false;
     this.isPaused = false;
     this.pauseStartTime = null;
-    this.pauseDuration = 5000; // 5 seconds
+    this.pauseDuration = 2500; // 5 seconds
     this.questDismissTimer = null;
     this.currentQuestMilestone = null;
     this.isShowingAnimation = false;
@@ -602,7 +604,245 @@ class Timeline {
       this.jobCards.push(jobCard);
     });
     
+    // Add finish line after the last milestone
+    const finishLineDistance = cumulativeDistance + 400; // 400px after last milestone
+    this.finishLineDistance = finishLineDistance;
+    const finishLineX = characterX + finishLineDistance;
+    this.createFinishLine(finishLineX);
+    
     console.log('Spawned', this.jobCards.length, 'job cards in the world');
+  }
+  
+  createFinishLine(xPosition) {
+    const finishLine = document.createElement('div');
+    finishLine.className = 'absolute';
+    finishLine.style.cssText = `
+      left: ${xPosition}px;
+      bottom: 0;
+      width: 40px;
+      height: 150px;
+      z-index: 5;
+      background: repeating-linear-gradient(
+        45deg,
+        #000 0px,
+        #000 10px,
+        #fff 10px,
+        #fff 20px
+      );
+      border: 4px solid #000;
+      box-shadow: 
+        0 0 0 2px #fff,
+        0 0 0 6px #000,
+        4px 4px 0 6px rgba(0,0,0,0.3);
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    `;
+    
+    // Add a flag pole on top
+    const pole = document.createElement('div');
+    pole.style.cssText = `
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 30px;
+      background: #8B4513;
+      border: 2px solid #000;
+      box-shadow: inset 2px 0 0 rgba(255,255,255,0.3);
+    `;
+    
+    // Add a checkered flag
+    const flag = document.createElement('div');
+    flag.style.cssText = `
+      position: absolute;
+      top: -28px;
+      left: calc(50% + 4px);
+      width: 32px;
+      height: 24px;
+      background: 
+        linear-gradient(90deg, #000 50%, transparent 50%),
+        linear-gradient(#000 50%, transparent 50%);
+      background-size: 8px 8px;
+      background-position: 0 0, 4px 4px;
+      border: 2px solid #000;
+      animation: flagWave 0.5s ease-in-out infinite alternate;
+    `;
+    
+    finishLine.appendChild(pole);
+    finishLine.appendChild(flag);
+    document.getElementById('jobCardsContainer').appendChild(finishLine);
+    
+    this.finishLineElement = {
+      element: finishLine,
+      x: xPosition,
+      worldPosition: this.finishLineDistance,
+      isPermanent: true
+    };
+  }
+  
+  triggerConfetti() {
+    // Get character canvas position
+    const characterCanvas = document.getElementById('characterCanvas');
+    const canvasRect = characterCanvas.getBoundingClientRect();
+    const containerRect = this.gameContainer.getBoundingClientRect();
+    
+    // Calculate character position relative to container
+    const characterLeftPercent = ((canvasRect.left - containerRect.left) / containerRect.width) * 100;
+    const characterWidth = (canvasRect.width / containerRect.width) * 100;
+    
+    // Create confetti container
+    this.confettiContainer = document.createElement('div');
+    this.confettiContainer.className = 'confetti-container';
+    this.confettiContainer.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 100;
+      overflow: hidden;
+    `;
+    
+    this.gameContainer.appendChild(this.confettiContainer);
+    
+    // Create 100 confetti pieces around character position
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff1493'];
+    
+    for (let i = 0; i < 100; i++) {
+      setTimeout(() => {
+        const confetti = document.createElement('div');
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        // Spawn around character canvas (center ± 15%)
+        const centerPos = characterLeftPercent + (characterWidth / 2);
+        const left = centerPos + (Math.random() * 30 - 15);
+        const animationDuration = 3 + Math.random() * 2;
+        const size = 8 + Math.random() * 8;
+        const rotation = Math.random() * 360;
+        const horizontalDrift = (Math.random() - 0.5) * 100; // Random horizontal movement
+        
+        confetti.style.cssText = `
+          position: absolute;
+          left: ${left}%;
+          top: -10px;
+          width: ${size}px;
+          height: ${size}px;
+          background: ${color};
+          opacity: 0.8;
+          animation: confettiFall ${animationDuration}s linear forwards;
+          transform: rotate(${rotation}deg);
+          --drift: ${horizontalDrift}px;
+        `;
+        
+        this.confettiContainer.appendChild(confetti);
+        
+        // Remove after animation
+        setTimeout(() => {
+          if (confetti.parentNode) {
+            confetti.remove();
+          }
+        }, animationDuration * 1000);
+      }, i * 30);
+    }
+    
+    // Show completion popup after a short delay
+    setTimeout(() => {
+      this.showCompletionPopup();
+    }, 1000);
+  }
+  
+  removeConfetti() {
+    if (this.confettiContainer && this.confettiContainer.parentNode) {
+      this.confettiContainer.remove();
+      this.confettiContainer = null;
+    }
+  }
+  
+  showCompletionPopup() {
+    const popup = document.createElement('div');
+    popup.id = 'completionPopup';
+    popup.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 200;
+      animation: popupBounce 0.5s ease-out;
+    `;
+    
+    popup.innerHTML = `
+      <div style="min-width: 400px; position: relative;">
+        <!-- 8-bit outer border -->
+        <div class="absolute inset-0 bg-gray-900" style="
+          clip-path: polygon(
+            0 12px, 12px 12px, 12px 0, calc(100% - 12px) 0, calc(100% - 12px) 12px, 100% 12px,
+            100% calc(100% - 12px), calc(100% - 12px) calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%,
+            12px calc(100% - 12px), 0 calc(100% - 12px)
+          );
+        "></div>
+        
+        <!-- Semi-transparent background with 8-bit inner border -->
+        <div class="relative m-3 p-8 text-center backdrop-blur-md" style="
+          font-family: 'Courier New', monospace;
+          background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(147, 51, 234, 0.3));
+          clip-path: polygon(
+            0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+            100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%,
+            8px calc(100% - 8px), 0 calc(100% - 8px)
+          );
+          box-shadow: 
+            inset 4px 4px 0 rgba(255,255,255,0.2),
+            inset -4px -4px 0 rgba(0,0,0,0.3),
+            0 8px 32px rgba(0,0,0,0.5);
+        ">
+          <!-- Corner pixels -->
+          <div class="absolute top-2 left-2 w-3 h-3 bg-yellow-400"></div>
+          <div class="absolute top-2 right-2 w-3 h-3 bg-yellow-400"></div>
+          <div class="absolute bottom-2 left-2 w-3 h-3 bg-yellow-400"></div>
+          <div class="absolute bottom-2 right-2 w-3 h-3 bg-yellow-400"></div>
+          
+          <!-- Content -->
+          <div class="text-6xl mb-4" style="filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.5));">🏁</div>
+          <h2 class="text-4xl font-bold text-yellow-400 mb-3 tracking-wider" style="
+            text-shadow: 
+              4px 4px 0 rgba(0,0,0,0.5),
+              -2px -2px 0 rgba(255,255,255,0.1);
+            image-rendering: pixelated;
+          ">
+            FINISH LINE!
+          </h2>
+          <div class="h-1 w-32 mx-auto mb-4 bg-gradient-to-r from-transparent via-yellow-400 to-transparent"></div>
+          <p class="text-white text-lg mb-2 font-bold">
+            You've completed the journey!
+          </p>
+          <p class="text-gray-400 text-sm mb-6">
+            Congratulations on reaching the end.
+          </p>
+          
+          <!-- 8-bit button -->
+          <button 
+            onclick="document.getElementById('completionPopup').remove(); window.timelineInstance.reset();"
+            class="relative bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 transform hover:scale-105 transition-all duration-200"
+            style="
+              font-size: 18px;
+              clip-path: polygon(
+                0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+                100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%,
+                4px calc(100% - 4px), 0 calc(100% - 4px)
+              );
+              box-shadow: 
+                inset -2px -2px 0 rgba(0,0,0,0.3),
+                inset 2px 2px 0 rgba(255,255,255,0.3),
+                4px 4px 0 rgba(0,0,0,0.3);
+            ">
+            <span style="text-shadow: 2px 2px 0 rgba(0,0,0,0.3);">RESTART JOURNEY</span>
+          </button>
+        </div>
+      </div>
+    `;
+    
+    this.gameContainer.appendChild(popup);
   }
   
   createCloud(xPosition) {
@@ -965,10 +1205,15 @@ class Timeline {
   updateProgress() {
     const progressBar = document.getElementById('progressBar');
     // Calculate progress based on distance traveled
-    const milestoneInterval = 800;
-    const totalDistance = this.milestones.length * milestoneInterval;
-    const progress = Math.min(100, Math.max(0, (this.manualDistanceTraveled / totalDistance) * 100));
-    progressBar.style.width = progress + '%';
+    // If at or past finish line, show 100%
+    if (this.finishLineDistance && this.manualDistanceTraveled >= this.finishLineDistance) {
+      progressBar.style.width = '100%';
+    } else {
+      const milestoneInterval = 800;
+      const totalDistance = this.milestones.length * milestoneInterval;
+      const progress = Math.min(100, Math.max(0, (this.manualDistanceTraveled / totalDistance) * 100));
+      progressBar.style.width = progress + '%';
+    }
   }
   
   highlightEvent(index) {
@@ -1013,6 +1258,21 @@ class Timeline {
     this.manualDistanceTraveled = 0;
     this.visitedMilestones.clear();
     this.welcomeCardDismissed = false;
+    this.finishLineCrossed = false;
+    
+    // Stop celebration jumping
+    if (this.celebrationJumpInterval) {
+      clearInterval(this.celebrationJumpInterval);
+      this.celebrationJumpInterval = null;
+    }
+    
+    // Remove confetti and completion popup
+    this.removeConfetti();
+    const completionPopup = document.getElementById('completionPopup');
+    if (completionPopup && completionPopup.parentNode) {
+      completionPopup.remove();
+    }
+    
     const progressBar = document.getElementById('progressBar');
     progressBar.style.width = '0%';
     
@@ -1033,6 +1293,12 @@ class Timeline {
     });
     this.jobCards = [];
     this.currentJobCard = null;
+    
+    // Remove finish line element
+    if (this.finishLineElement && this.finishLineElement.element && this.finishLineElement.element.parentNode) {
+      this.finishLineElement.element.remove();
+      this.finishLineElement = null;
+    }
     
     if (this.welcomeCard && this.welcomeCard.parentNode) {
       this.welcomeCard.remove();
@@ -1060,6 +1326,16 @@ class Timeline {
     });
   }
   
+  startCelebrationJumping() {
+    // Make character jump repeatedly
+    this.character.startJumping();
+    
+    // Set interval to keep jumping
+    this.celebrationJumpInterval = setInterval(() => {
+      this.character.startJumping();
+    }, 800); // Jump every 800ms
+  }
+
   animate() {
     this.character.update();
     
@@ -1089,11 +1365,30 @@ class Timeline {
   updateManualMovement(speed) {
     const containerWidth = this.gameContainer.offsetWidth;
     
+    // Check if at finish line - hard stop forward movement
+    if (this.movingRight && this.manualDistanceTraveled >= this.finishLineDistance) {
+      // Stop all forward movement
+      this.movingRight = false;
+      
+      // Trigger confetti celebration if not already crossed
+      if (!this.finishLineCrossed) {
+        this.finishLineCrossed = true;
+        this.startCelebrationJumping();
+        this.triggerConfetti();
+      }
+      return;
+    }
+    
     // Track distance traveled (can go backward)
     if (this.movingRight) {
       this.manualDistanceTraveled += Math.abs(speed);
     } else if (this.movingLeft) {
       this.manualDistanceTraveled = Math.max(0, this.manualDistanceTraveled - Math.abs(speed));
+      // Reset finish line crossed flag if moving backward
+      if (this.manualDistanceTraveled < this.finishLineDistance) {
+        this.finishLineCrossed = false;
+        this.removeConfetti();
+      }
     }
     
     // Update progress bar based on current position
@@ -1109,11 +1404,13 @@ class Timeline {
       cloud.x -= speed * 0.3; // Slower for parallax
       cloud.element.style.left = cloud.x + 'px';
       
-      // Wrap around if off screen
-      if (cloud.x < -100) {
-        cloud.x = containerWidth + 100;
-      } else if (cloud.x > containerWidth + 100) {
-        cloud.x = -100;
+      // Only wrap around if not past finish line
+      if (this.manualDistanceTraveled < this.finishLineDistance) {
+        if (cloud.x < -100) {
+          cloud.x = containerWidth + 100;
+        } else if (cloud.x > containerWidth + 100) {
+          cloud.x = -100;
+        }
       }
     }
     
@@ -1121,11 +1418,13 @@ class Timeline {
       tree.x -= speed;
       tree.element.style.left = tree.x + 'px';
       
-      // Wrap around if off screen
-      if (tree.x < -100) {
-        tree.x = containerWidth + 100;
-      } else if (tree.x > containerWidth + 100) {
-        tree.x = -100;
+      // Only wrap around if not past finish line
+      if (this.manualDistanceTraveled < this.finishLineDistance) {
+        if (tree.x < -100) {
+          tree.x = containerWidth + 100;
+        } else if (tree.x > containerWidth + 100) {
+          tree.x = -100;
+        }
       }
     }
     
@@ -1133,11 +1432,13 @@ class Timeline {
       rock.x -= speed;
       rock.element.style.left = rock.x + 'px';
       
-      // Wrap around if off screen
-      if (rock.x < -50) {
-        rock.x = containerWidth + 50;
-      } else if (rock.x > containerWidth + 50) {
-        rock.x = -50;
+      // Only wrap around if not past finish line
+      if (this.manualDistanceTraveled < this.finishLineDistance) {
+        if (rock.x < -50) {
+          rock.x = containerWidth + 50;
+        } else if (rock.x > containerWidth + 50) {
+          rock.x = -50;
+        }
       }
     }
     
@@ -1149,28 +1450,36 @@ class Timeline {
       }
     }
     
-    // Spawn new elements if needed
-    if (this.movingRight) {
-      // Moving forward - spawn on the right
-      if (this.clouds.length < 5 && Math.random() < 0.02) {
-        this.createCloud(containerWidth + 100);
-      }
-      if (this.trees.length < 3 && Math.random() < 0.015) {
-        this.createTree(containerWidth + 100);
-      }
-      if (this.rocks.length < 4 && Math.random() < 0.03) {
-        this.createRock(containerWidth + 50);
-      }
-    } else if (this.movingLeft) {
-      // Moving backward - spawn on the left
-      if (this.clouds.length < 5 && Math.random() < 0.02) {
-        this.createCloud(-100);
-      }
-      if (this.trees.length < 3 && Math.random() < 0.015) {
-        this.createTree(-100);
-      }
-      if (this.rocks.length < 4 && Math.random() < 0.03) {
-        this.createRock(-50);
+    // Move finish line with character movement
+    if (this.finishLineElement && this.finishLineElement.element && this.finishLineElement.element.parentNode) {
+      this.finishLineElement.x -= speed;
+      this.finishLineElement.element.style.left = this.finishLineElement.x + 'px';
+    }
+    
+    // Spawn new elements if needed (only before finish line)
+    if (this.manualDistanceTraveled < this.finishLineDistance) {
+      if (this.movingRight) {
+        // Moving forward - spawn on the right
+        if (this.clouds.length < 5 && Math.random() < 0.02) {
+          this.createCloud(containerWidth + 100);
+        }
+        if (this.trees.length < 3 && Math.random() < 0.015) {
+          this.createTree(containerWidth + 100);
+        }
+        if (this.rocks.length < 4 && Math.random() < 0.03) {
+          this.createRock(containerWidth + 50);
+        }
+      } else if (this.movingLeft) {
+        // Moving backward - spawn on the left
+        if (this.clouds.length < 5 && Math.random() < 0.02) {
+          this.createCloud(-100);
+        }
+        if (this.trees.length < 3 && Math.random() < 0.015) {
+          this.createTree(-100);
+        }
+        if (this.rocks.length < 4 && Math.random() < 0.03) {
+          this.createRock(-50);
+        }
       }
     }
   }
@@ -1218,24 +1527,29 @@ class Timeline {
           if (!this.isShowingAnimation) {
             this.isShowingAnimation = true;
             const wasMoving = this.isAutoMoving;
+            const isManualControl = this.movingLeft || this.movingRight;
             this.character.startShowing();
             
             // Play showing animation for 2 seconds, then continue
+            // But only set timer if NOT manually controlling
             if (this.showingAnimationTimer) {
               clearTimeout(this.showingAnimationTimer);
             }
-            this.showingAnimationTimer = setTimeout(() => {
-              this.isShowingAnimation = false;
-              
-              // Return to appropriate state after showing
-              if (wasMoving && this.isAutoMoving) {
-                this.character.startWalking();
-              } else if (this.movingLeft || this.movingRight) {
-                this.character.startWalking();
-              } else {
-                this.character.stopWalking();
-              }
-            }, 2000); // 2 seconds for showing animation
+            
+            if (!isManualControl) {
+              this.showingAnimationTimer = setTimeout(() => {
+                this.isShowingAnimation = false;
+                
+                // Return to appropriate state after showing
+                if (wasMoving && this.isAutoMoving) {
+                  this.character.startWalking();
+                } else if (this.movingLeft || this.movingRight) {
+                  this.character.startWalking();
+                } else {
+                  this.character.stopWalking();
+                }
+              }, 2000); // 2 seconds for showing animation
+            }
           }
           
           // Pause at milestone if auto-moving (after showing animation)
@@ -1419,6 +1733,9 @@ class Timeline {
 // Initialize when page loads
 window.addEventListener('load', () => {
   const timeline = new Timeline();
+  
+  // Make timeline instance globally accessible for popup restart button
+  window.timelineInstance = timeline;
   
   // Listen for joystick controller events
   document.addEventListener('timelineControl', (e) => {

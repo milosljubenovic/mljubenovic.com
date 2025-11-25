@@ -22,6 +22,36 @@
   50% { transform: translateY(-8px); }
 }
 
+@keyframes flagWave {
+  0% { transform: skewY(0deg); }
+  100% { transform: skewY(5deg); }
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(500px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes popupBounce {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
 .animate-blob {
   animation: blob 7s infinite;
 }

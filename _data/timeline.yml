@@ -4,8 +4,8 @@
   location: "Novi Sad"
   logo: "/assets/timeline/companies/rtrk_logo.jpg"
   company: "RT-RK"
-  description: "Developed embedded software for automotive infotainment systems and worked on Linux-based solutions."
-  techstack: ["C++", "Qt", "Linux", "Embedded Systems"]
+  description: "Developed embedded software for automotive systems and worked on Linux-based solutions."
+  techstack: ["C++", "Qt", "Linux", "Embedded Systems", "QNX", "Python"]
 
 - year: "2020"
   title: "Aerwave - Platform Development Lead"
@@ -87,7 +87,7 @@
   logo: "/assets/timeline/companies/aerwave_logo.jpeg"
   company: "Aerwave"
   description: "Returned to lead technical development initiatives and scale engineering practices."
-  techstack: ["React", "Node.js", "AWS", "GraphQL", "Microservices"]
+  techstack: ["Python", "Node.js", "GCP", "Azure", "GraphQL", "Redis", "SQL", "Microservices"]
 
 - year: "2023"
   title: "Clouddle - Technical Development Lead"
@@ -95,15 +95,15 @@
   logo: "/assets/timeline/companies/clouddle_logo.png"
   company: "Clouddle"
   description: "Led development of cloud infrastructure automation tools and DevOps practices."
-  techstack: ["Terraform", "AWS", "Python", "Go", "CI/CD"]
+  techstack: ["PHP", "AWS", "Python", "Go", "CI/CD", "Dokploy"]
 
 - year: "2024"
   title: "Adapptiv - Senior Software Engineer"
   location: "London (Remote)"
   logo: null
   company: "Adapptiv"
-  description: "Built scalable backend systems for adaptive learning platforms."
-  techstack: ["Java", "Spring Boot", "Kafka", "MongoDB"]
+  description: "Built scalable backend systems for BMS Module integration."
+  techstack: ["Python", "C++", "Embeded Systems", "InfluxDB"]
 
 - year: "2024"
   title: "symphony.is - Senior Software Engineer"
@@ -111,7 +111,7 @@
   logo: "/assets/timeline/companies/symphony_logo.png"
   company: "symphony.is"
   description: "Developed enterprise software solutions with focus on performance and scalability."
-  techstack: ["TypeScript", "NestJS", "PostgreSQL", "Redis"]
+  techstack: ["Embeded Systems", "Industrial Internet of Things", "Python", "DuckDB", "CPython"]
 
 - year: "2024"
   title: "symphony.is - Interns Mentorship"
@@ -130,4 +130,4 @@
   logo: "/assets/timeline/companies/tide_logo.png"
   company: "tide.co"
   description: "Building modern banking infrastructure and financial services platform."
-  techstack: ["TypeScript", "React", "AWS", "Microservices", "DDD"]
+  techstack: ["Python", "FastAPI", "Redis", "Microservices", "DDD", "AWS"] 
