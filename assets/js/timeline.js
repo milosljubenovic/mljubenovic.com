@@ -321,11 +321,13 @@ class Timeline {
     
     // Infinite generation tracking
     this.clouds = [];
+    this.mountains = []; // Parallax mountains
     this.trees = [];
     this.rocks = [];
     this.jobCards = [];
     this.totalDistance = 0;
     this.nextCloudX = 0;
+    this.nextMountainX = 0;
     this.nextTreeX = 0;
     this.nextRockX = 0;
     
@@ -556,6 +558,12 @@ class Timeline {
   spawnInitialElements() {
     const containerWidth = this.gameContainer.offsetWidth;
     
+    // Spawn initial mountains (far background)
+    for (let i = 0; i < 4; i++) {
+      const x = (containerWidth / 4) * i + Math.random() * 200;
+      this.createMountain(x);
+    }
+    
     // Spawn initial clouds spread across the screen
     for (let i = 0; i < 5; i++) {
       const x = (containerWidth / 5) * i + Math.random() * 100;
@@ -574,6 +582,7 @@ class Timeline {
       this.createRock(x);
     }
     
+    this.nextMountainX = 0;
     this.nextCloudX = 0;
     this.nextTreeX = 0;
     this.nextRockX = 0;
@@ -843,6 +852,36 @@ class Timeline {
     `;
     
     this.gameContainer.appendChild(popup);
+  }
+  
+  createMountain(xPosition) {
+    const mountain = document.createElement('div');
+    const scale = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
+    const baseWidth = 300 * scale;
+    const baseHeight = 200 * scale;
+    const hue = 200 + Math.random() * 40; // Blue-purple mountains
+    
+    mountain.className = 'absolute';
+    mountain.style.left = xPosition + 'px';
+    mountain.style.bottom = '0';
+    mountain.style.zIndex = '1'; // Behind clouds
+    
+    // Create triangular mountain with CSS
+    mountain.innerHTML = `
+      <div style="
+        width: 0;
+        height: 0;
+        border-left: ${baseWidth / 2}px solid transparent;
+        border-right: ${baseWidth / 2}px solid transparent;
+        border-bottom: ${baseHeight}px solid hsl(${hue}, 30%, 40%);
+        filter: blur(1px);
+        opacity: 0.6;
+      "></div>
+    `;
+    
+    document.getElementById('jobCardsContainer').appendChild(mountain);
+    
+    this.mountains.push({ element: mountain, x: xPosition, width: baseWidth });
   }
   
   createCloud(xPosition) {
@@ -1277,6 +1316,9 @@ class Timeline {
     progressBar.style.width = '0%';
     
     // Remove all dynamically generated elements
+    this.mountains.forEach(mountain => mountain.element.remove());
+    this.mountains = [];
+    
     this.clouds.forEach(cloud => cloud.element.remove());
     this.clouds = [];
     
@@ -1400,6 +1442,22 @@ class Timeline {
     // Move all elements (clouds, trees, rocks) to create movement effect
     // When moving right (forward), world moves left (negative)
     // When moving left (backward), world moves right (positive)
+    
+    // Move mountains (slowest parallax - far background)
+    for (let mountain of this.mountains) {
+      mountain.x -= speed * 0.15; // Very slow for far background
+      mountain.element.style.left = mountain.x + 'px';
+      
+      // Only wrap around if not past finish line
+      if (this.manualDistanceTraveled < this.finishLineDistance) {
+        if (mountain.x < -mountain.width) {
+          mountain.x = containerWidth + 100;
+        } else if (mountain.x > containerWidth + 100) {
+          mountain.x = -mountain.width;
+        }
+      }
+    }
+    
     for (let cloud of this.clouds) {
       cloud.x -= speed * 0.3; // Slower for parallax
       cloud.element.style.left = cloud.x + 'px';
@@ -1460,6 +1518,9 @@ class Timeline {
     if (this.manualDistanceTraveled < this.finishLineDistance) {
       if (this.movingRight) {
         // Moving forward - spawn on the right
+        if (this.mountains.length < 4 && Math.random() < 0.01) {
+          this.createMountain(containerWidth + 200);
+        }
         if (this.clouds.length < 5 && Math.random() < 0.02) {
           this.createCloud(containerWidth + 100);
         }
@@ -1471,6 +1532,9 @@ class Timeline {
         }
       } else if (this.movingLeft) {
         // Moving backward - spawn on the left
+        if (this.mountains.length < 4 && Math.random() < 0.01) {
+          this.createMountain(-200);
+        }
         if (this.clouds.length < 5 && Math.random() < 0.02) {
           this.createCloud(-100);
         }
