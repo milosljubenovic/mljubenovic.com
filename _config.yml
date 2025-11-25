@@ -25,6 +25,9 @@ collections:
   projects:
     output: true
     permalink: /projects/:path/
+  kudos:
+    output: true
+    permalink: /kudos/:path/
 
 # Defaults
 defaults:
@@ -44,6 +47,11 @@ defaults:
       type: "projects"
     values:
       layout: "project-item"
+  - scope:
+      path: ""
+      type: "kudos"
+    values:
+      layout: "kudos-item"
   - scope:
       path: ""
     values:

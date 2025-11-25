@@ -1,0 +1,121 @@
+---
+layout: default
+---
+
+<article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="mb-8">
+    <a href="/kudos" class="text-primary-600 dark:text-primary-400 hover:underline">
+      ← Back to Kudos
+    </a>
+  </div>
+  
+  <header class="mb-8">
+    <!-- Avatar or Initials -->
+    <div class="mb-6 relative inline-block">
+      {% if page.avatar %}
+        <img src="{{ page.avatar | relative_url }}" 
+             alt="{{ page.person }}" 
+             class="h-24 w-24 rounded-full object-cover border-4 border-gray-200 dark:border-gray-700">
+      {% else %}
+        {% assign names = page.person | split: ' ' %}
+        {% assign first_initial = names[0] | slice: 0 %}
+        {% assign last_initial = names[-1] | slice: 0 %}
+        {% assign initials = first_initial | append: last_initial | upcase %}
+        {% assign name_hash = page.person | size | modulo: 5 %}
+        <div class="h-24 w-24 rounded-full flex items-center justify-center text-3xl font-bold text-white border-4 border-gray-200 dark:border-gray-700 kudos-avatar-{{ name_hash }}">
+          {{ initials }}
+        </div>
+      {% endif %}
+      
+      <!-- Directional Badge -->
+      {% if page.type == 'given' %}
+        <div class="absolute -bottom-2 -right-2 bg-blue-500 text-white rounded-full p-2 border-2 border-white dark:border-gray-900">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+          </svg>
+        </div>
+      {% else %}
+        <div class="absolute -bottom-2 -right-2 bg-green-500 text-white rounded-full p-2 border-2 border-white dark:border-gray-900">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+          </svg>
+        </div>
+      {% endif %}
+    </div>
+    
+    <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+      {{ page.person }}
+    </h1>
+    
+    {% if page.company %}
+    <div class="text-xl text-primary-600 dark:text-primary-400 mb-4">
+      {{ page.company }}
+    </div>
+    {% endif %}
+    
+    <div class="flex flex-wrap gap-3 items-center text-gray-600 dark:text-gray-400">
+      <span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm font-medium">
+        {{ page.relationship | capitalize }}
+      </span>
+      
+      {% if page.type == 'given' %}
+        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
+          Given Kudos ↗
+        </span>
+      {% else %}
+        <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full text-sm font-medium">
+          Received Kudos ↘
+        </span>
+      {% endif %}
+      
+      <time class="text-sm">
+        {{ page.date | date: "%B %d, %Y" }}
+      </time>
+    </div>
+    
+    {% if page.experience %}
+      {% assign exp_item = site.experience | where_exp: "item", "item.url contains page.experience" | first %}
+      {% if exp_item %}
+      <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center gap-3">
+          {% if exp_item.logo %}
+          <img src="{{ exp_item.logo | relative_url }}" 
+               alt="{{ exp_item.company }}" 
+               class="h-10 w-10 object-contain">
+          {% endif %}
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Related to</p>
+            <a href="{{ exp_item.url | relative_url }}" class="text-primary-600 dark:text-primary-400 hover:underline font-medium">
+              {{ exp_item.role }} at {{ exp_item.company }}
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    {% endif %}
+  </header>
+  
+  <div class="prose prose-lg dark:prose-dark max-w-none bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+    {{ content }}
+  </div>
+  
+  {% if page.technologies %}
+  <div class="mt-8">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Technologies</h3>
+    <div class="flex flex-wrap gap-2">
+      {% for tech in page.technologies %}
+      <span class="tag">{{ tech }}</span>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</article>
+
+<style>
+  /* Avatar background colors based on name hash */
+  .kudos-avatar-0 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+  .kudos-avatar-1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+  .kudos-avatar-2 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+  .kudos-avatar-3 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+  .kudos-avatar-4 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+</style>

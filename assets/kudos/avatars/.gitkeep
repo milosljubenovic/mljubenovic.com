@@ -1,0 +1,4 @@
+# This directory stores avatar images for kudos
+# Images should be square format (recommended: 200x200px or larger)
+# Supported formats: .jpg, .jpeg, .png, .webp
+# If no avatar is provided, initials will be generated from the person's name

@@ -1,0 +1,187 @@
+---
+layout: page
+title: Kudos
+permalink: /kudos/
+---
+
+<div class="mb-8">
+  <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Kudos</h1>
+  <p class="text-xl text-gray-600 dark:text-gray-400">
+    Recognition and appreciation shared with colleagues and received from peers
+  </p>
+</div>
+
+<!-- Filter Buttons -->
+<div class="mb-8">
+  <div class="flex flex-wrap gap-2 mb-4">
+    <button onclick="filterByType('all')" class="kudos-filter-btn active" data-filter="all">
+      All
+    </button>
+    <button onclick="filterByType('given')" class="kudos-filter-btn" data-filter="given">
+      Given ↗
+    </button>
+    <button onclick="filterByType('received')" class="kudos-filter-btn" data-filter="received">
+      Received ↘
+    </button>
+  </div>
+  
+  <!-- Relationship Filters -->
+  <div class="flex flex-wrap gap-2">
+    <span class="text-sm text-gray-600 dark:text-gray-400 self-center mr-2">Filter by:</span>
+    <button onclick="filterByRelationship('all')" class="kudos-relationship-btn active" data-relationship="all">
+      All
+    </button>
+    {% assign all_relationships = site.kudos | where: "public", true | map: 'relationship' | uniq | sort %}
+    {% for rel in all_relationships %}
+      {% if rel != "" %}
+      <button onclick="filterByRelationship('{{ rel | slugify }}')" class="kudos-relationship-btn" data-relationship="{{ rel | slugify }}">
+        {{ rel | capitalize }}
+      </button>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Kudos Grid -->
+<div class="space-y-6" id="kudos-container">
+  {% assign public_kudos = site.kudos | where: "public", true | sort: 'date' | reverse %}
+  
+  {% if public_kudos.size == 0 %}
+  <div class="text-center py-12">
+    <p class="text-gray-600 dark:text-gray-400">No kudos to display yet.</p>
+  </div>
+  {% else %}
+    {% for kudos in public_kudos %}
+    <div class="kudos-item" 
+         data-type="{{ kudos.type }}" 
+         data-relationship="{{ kudos.relationship | slugify }}"
+         data-index="{{ forloop.index0 }}">
+      {% include kudos-card.html kudos=kudos %}
+    </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<!-- Pagination Controls -->
+{% if public_kudos.size > 3 %}
+<div class="mt-8 text-center">
+  <button id="load-more-btn" onclick="loadMore()" class="px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors duration-200">
+    Load More
+  </button>
+  <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+    Showing <span id="shown-count">0</span> of <span id="total-count">{{ public_kudos.size }}</span> kudos
+  </p>
+</div>
+{% endif %}
+
+<script>
+  let currentType = 'all';
+  let currentRelationship = 'all';
+  let itemsPerPage = 3;
+  let currentlyShown = 0;
+  
+  function initializePagination() {
+    const allItems = document.querySelectorAll('.kudos-item');
+    currentlyShown = Math.min(itemsPerPage, allItems.length);
+    updateVisibility();
+  }
+  
+  function updateVisibility() {
+    const items = document.querySelectorAll('.kudos-item');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const shownCount = document.getElementById('shown-count');
+    
+    let visibleCount = 0;
+    let displayedCount = 0;
+    
+    items.forEach((item, index) => {
+      const itemType = item.dataset.type;
+      const itemRelationship = item.dataset.relationship;
+      
+      const typeMatch = currentType === 'all' || itemType === currentType;
+      const relationshipMatch = currentRelationship === 'all' || itemRelationship === currentRelationship;
+      
+      if (typeMatch && relationshipMatch) {
+        visibleCount++;
+        if (displayedCount < currentlyShown) {
+          item.style.display = 'block';
+          displayedCount++;
+        } else {
+          item.style.display = 'none';
+        }
+      } else {
+        item.style.display = 'none';
+      }
+    });
+    
+    // Update counter
+    if (shownCount) {
+      shownCount.textContent = displayedCount;
+    }
+    
+    // Show/hide load more button
+    if (loadMoreBtn) {
+      if (displayedCount < visibleCount) {
+        loadMoreBtn.style.display = 'inline-block';
+      } else {
+        loadMoreBtn.style.display = 'none';
+      }
+    }
+  }
+  
+  function loadMore() {
+    currentlyShown += itemsPerPage;
+    updateVisibility();
+  }
+  
+  function filterByType(type) {
+    currentType = type;
+    currentlyShown = itemsPerPage; // Reset pagination
+    
+    // Update button states
+    const buttons = document.querySelectorAll('.kudos-filter-btn');
+    buttons.forEach(btn => {
+      if (btn.dataset.filter === type) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    
+    updateVisibility();
+  }
+  
+  function filterByRelationship(relationship) {
+    currentRelationship = relationship;
+    currentlyShown = itemsPerPage; // Reset pagination
+    
+    // Update button states
+    const buttons = document.querySelectorAll('.kudos-relationship-btn');
+    buttons.forEach(btn => {
+      if (btn.dataset.relationship === relationship) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    
+    updateVisibility();
+  }
+  
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', initializePagination);
+</script>
+
+<style>
+  .kudos-filter-btn, .kudos-relationship-btn {
+    @apply px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-600;
+  }
+  
+  .kudos-filter-btn.active {
+    @apply bg-primary-600 text-white hover:bg-primary-700;
+  }
+  
+  .kudos-relationship-btn.active {
+    @apply bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 border-2 border-primary-600 dark:border-primary-400;
+  }
+</style>

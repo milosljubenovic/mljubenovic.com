@@ -1,0 +1,113 @@
+{% comment %}
+  Kudos Card Component
+  
+  Usage: {% include kudos-card.html kudos=kudos %}
+{% endcomment %}
+
+{% assign kudos = include.kudos %}
+
+<article class="card p-6 hover:shadow-xl transition-shadow duration-300">
+  <div class="flex items-start gap-4">
+    <!-- Avatar or Initials -->
+    <div class="relative flex-shrink-0">
+      {% if kudos.avatar %}
+        <img src="{{ kudos.avatar | relative_url }}" 
+             alt="{{ kudos.person }}" 
+             class="h-16 w-16 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700">
+      {% else %}
+        {% assign names = kudos.person | split: ' ' %}
+        {% assign first_initial = names[0] | slice: 0 %}
+        {% assign last_initial = names[-1] | slice: 0 %}
+        {% assign initials = first_initial | append: last_initial | upcase %}
+        {% assign name_hash = kudos.person | size | modulo: 5 %}
+        <div class="h-16 w-16 rounded-full flex items-center justify-center text-xl font-bold text-white border-2 border-gray-200 dark:border-gray-700 kudos-avatar-{{ name_hash }}">
+          {{ initials }}
+        </div>
+      {% endif %}
+      
+      <!-- Directional Icon -->
+      {% if kudos.type == 'given' %}
+        <div class="absolute -bottom-1 -right-1 bg-blue-500 text-white rounded-full p-1 border-2 border-white dark:border-gray-900">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+          </svg>
+        </div>
+      {% else %}
+        <div class="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-1 border-2 border-white dark:border-gray-900">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+          </svg>
+        </div>
+      {% endif %}
+    </div>
+    
+    <!-- Content -->
+    <div class="flex-1 min-w-0">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+        <a href="{{ kudos.url | relative_url }}" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
+          {{ kudos.person }}
+        </a>
+      </h3>
+      
+      {% if kudos.company %}
+      <p class="text-sm text-primary-600 dark:text-primary-400 mb-2">
+        {{ kudos.company }}
+      </p>
+      {% endif %}
+      
+      <div class="flex flex-wrap gap-2 mb-3">
+        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs font-medium">
+          {{ kudos.relationship | capitalize }}
+        </span>
+        
+        {% if kudos.type == 'given' %}
+          <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
+            Given ↗
+          </span>
+        {% else %}
+          <span class="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded text-xs font-medium">
+            Received ↘
+          </span>
+        {% endif %}
+        
+        <time class="text-xs text-gray-600 dark:text-gray-400">
+          {{ kudos.date | date: "%b %d, %Y" }}
+        </time>
+      </div>
+      
+      <!-- Message Excerpt -->
+      {% assign message_excerpt = kudos.content | strip_html | truncate: 120 %}
+      <p class="text-gray-600 dark:text-gray-400 mb-3 text-sm">
+        {{ message_excerpt }}
+      </p>
+      
+      <!-- Technologies -->
+      {% if kudos.technologies %}
+      <div class="flex flex-wrap gap-1 mb-3">
+        {% for tech in kudos.technologies limit:3 %}
+        <span class="tag text-xs">{{ tech }}</span>
+        {% endfor %}
+        {% assign tech_count = kudos.technologies | size %}
+        {% if tech_count > 3 %}
+        <span class="text-xs text-gray-500 dark:text-gray-400 px-2 py-1">
+          +{{ tech_count | minus: 3 }} more
+        </span>
+        {% endif %}
+      </div>
+      {% endif %}
+      
+      <a href="{{ kudos.url | relative_url }}" class="text-primary-600 dark:text-primary-400 hover:underline font-medium text-sm">
+        Read More →
+      </a>
+    </div>
+  </div>
+</article>
+
+<style>
+  /* Avatar background colors based on name hash */
+  .kudos-avatar-0 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+  .kudos-avatar-1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+  .kudos-avatar-2 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+  .kudos-avatar-3 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+  .kudos-avatar-4 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+</style>
