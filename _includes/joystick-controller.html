@@ -214,6 +214,8 @@
     // D-Pad Controls with press/release for manual movement
     const dpadLeft = document.getElementById('dpad-left');
     const dpadRight = document.getElementById('dpad-right');
+    const dpadUp = document.getElementById('dpad-up');
+    const dpadDown = document.getElementById('dpad-down');
     
     // Left button - manual movement
     dpadLeft?.addEventListener('mousedown', function() {
@@ -251,6 +253,42 @@
       document.dispatchEvent(event);
     });
     
+    // Up button - jump
+    dpadUp?.addEventListener('mousedown', function() {
+      console.log('D-Pad Up pressed - Jump');
+      buttonFeedback(this);
+      const event = new CustomEvent('manualControl', { detail: { action: 'up-press' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadUp?.addEventListener('mouseup', function() {
+      const event = new CustomEvent('manualControl', { detail: { action: 'up-release' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadUp?.addEventListener('mouseleave', function() {
+      const event = new CustomEvent('manualControl', { detail: { action: 'up-release' } });
+      document.dispatchEvent(event);
+    });
+    
+    // Down button - squat
+    dpadDown?.addEventListener('mousedown', function() {
+      console.log('D-Pad Down pressed - Squat');
+      buttonFeedback(this);
+      const event = new CustomEvent('manualControl', { detail: { action: 'down-press' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadDown?.addEventListener('mouseup', function() {
+      const event = new CustomEvent('manualControl', { detail: { action: 'down-release' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadDown?.addEventListener('mouseleave', function() {
+      const event = new CustomEvent('manualControl', { detail: { action: 'down-release' } });
+      document.dispatchEvent(event);
+    });
+    
     // Touch events for mobile
     dpadLeft?.addEventListener('touchstart', function(e) {
       e.preventDefault();
@@ -275,6 +313,32 @@
     dpadRight?.addEventListener('touchend', function(e) {
       e.preventDefault();
       const event = new CustomEvent('manualControl', { detail: { action: 'right-release' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadUp?.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      buttonFeedback(this);
+      const event = new CustomEvent('manualControl', { detail: { action: 'up-press' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadUp?.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      const event = new CustomEvent('manualControl', { detail: { action: 'up-release' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadDown?.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      buttonFeedback(this);
+      const event = new CustomEvent('manualControl', { detail: { action: 'down-press' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadDown?.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      const event = new CustomEvent('manualControl', { detail: { action: 'down-release' } });
       document.dispatchEvent(event);
     });
     
@@ -344,6 +408,16 @@
         const event = new CustomEvent('manualControl', { detail: { action: 'left-press' } });
         document.dispatchEvent(event);
         dpadLeft?.classList.add('ring-2', 'ring-white', 'ring-opacity-50');
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const event = new CustomEvent('manualControl', { detail: { action: 'up-press' } });
+        document.dispatchEvent(event);
+        dpadUp?.classList.add('ring-2', 'ring-white', 'ring-opacity-50');
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const event = new CustomEvent('manualControl', { detail: { action: 'down-press' } });
+        document.dispatchEvent(event);
+        dpadDown?.classList.add('ring-2', 'ring-white', 'ring-opacity-50');
       }
     });
     
@@ -358,6 +432,16 @@
         const event = new CustomEvent('manualControl', { detail: { action: 'left-release' } });
         document.dispatchEvent(event);
         dpadLeft?.classList.remove('ring-2', 'ring-white', 'ring-opacity-50');
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const event = new CustomEvent('manualControl', { detail: { action: 'up-release' } });
+        document.dispatchEvent(event);
+        dpadUp?.classList.remove('ring-2', 'ring-white', 'ring-opacity-50');
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const event = new CustomEvent('manualControl', { detail: { action: 'down-release' } });
+        document.dispatchEvent(event);
+        dpadDown?.classList.remove('ring-2', 'ring-white', 'ring-opacity-50');
       }
     });
   });

@@ -4,20 +4,61 @@ class SpriteCharacter {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d');
     
-    // Load individual frame images
-    this.frames = [
-      '/assets/timeline/walking/standing.png',
-      '/assets/timeline/walking/walkin_1.png',
-      '/assets/timeline/walking/walking_2.png',
-      '/assets/timeline/walking/walking_3.png',
-    ];
-    this.images = [];
+    // Load individual frame images by animation type
+    this.animations = {
+      standing: ['/assets/timeline/walking/standing.png'],
+      walking: [
+        '/assets/timeline/walking/walk_1.png',
+        '/assets/timeline/walking/walk_2.png',
+        '/assets/timeline/walking/walk_3.png',
+        '/assets/timeline/walking/walk_4.png',
+        '/assets/timeline/walking/walk_5.png',
+      ],
+      jumping: [
+        '/assets/timeline/walking/jump_1.png',
+        '/assets/timeline/walking/jump_2.png',
+        '/assets/timeline/walking/jump_3.png',
+        "/assets/timeline/walking/jump_4.png",
+      ],
+      squatting: [
+        '/assets/timeline/walking/squat_1.png',
+        '/assets/timeline/walking/squat_2.png',
+        '/assets/timeline/walking/squat_3.png',
+        '/assets/timeline/walking/squat_4.png',
+        '/assets/timeline/walking/squat_5.png'
+      ],
+      showing: [
+        '/assets/timeline/walking/wave_1.png',
+        '/assets/timeline/walking/wave_2.png'
+      ]
+    };
+    
+    this.images = {};
+    this.boundingBoxes = {}; // Store bounding box for each frame
     this.imagesLoaded = 0;
+    this.totalImages = 0;
+    
+    // Canvas configuration - fixed size for consistent display
+    this.displayWidth = 100;   // Display size in pixels
+    this.displayHeight = 100;
+    this.canvas.width = this.displayWidth;
+    this.canvas.height = this.displayHeight;
+    
+    // Set canvas style for crisp pixel rendering
+    this.canvas.style.imageRendering = 'pixelated';
+    this.canvas.style.imageRendering = 'crisp-edges';
+    this.canvas.style.backgroundColor = 'transparent';
+    
+    // Disable image smoothing for pixel-perfect rendering
+    this.ctx.imageSmoothingEnabled = false;
+    this.ctx.mozImageSmoothingEnabled = false;
+    this.ctx.webkitImageSmoothingEnabled = false;
+    this.ctx.msImageSmoothingEnabled = false;
     
     // Animation configuration
-    this.scale = 1;         // Scale the character
+    this.currentState = 'standing'; // standing, walking, jumping, squatting
     this.currentFrame = 0;
-    this.frameDelay = 10;   // Frames to wait before switching sprite (increased from 5)
+    this.frameDelay = 10;   // Frames to wait before switching sprite
     this.frameCounter = 0;
     
     // Position (world position, not screen position)
@@ -25,7 +66,6 @@ class SpriteCharacter {
     this.targetWorldX = 0;
     this.speed = 3;
     this.speedMultiplier = 1;
-    this.isWalking = false;
     this.facingRight = true; // Track direction character is facing
     
     // Load all frame images
@@ -34,94 +74,194 @@ class SpriteCharacter {
   
   loadImages() {
     console.log('Loading character images...');
-    this.frames.forEach((src, index) => {
-      const img = new Image();
-      img.onload = () => {
-        this.imagesLoaded++;
-        console.log(`Image ${index} loaded (${this.imagesLoaded}/${this.frames.length})`);
-        if (this.imagesLoaded === this.frames.length) {
-          // All images loaded, setup canvas and draw
-          const firstImage = this.images[0];
-          this.canvas.width = firstImage.width * this.scale;
-          this.canvas.height = firstImage.height * this.scale;
-          console.log('All images loaded, canvas size:', this.canvas.width, 'x', this.canvas.height);
-          this.draw();
-        }
-      };
-      img.onerror = () => {
-        console.error('Failed to load image:', src);
-      };
-      img.src = src;
-      this.images[index] = img;
+    
+    // Count total images
+    Object.values(this.animations).forEach(frames => {
+      this.totalImages += frames.length;
+    });
+    
+    // Load each animation's frames
+    Object.entries(this.animations).forEach(([animName, frames]) => {
+      this.images[animName] = [];
+      this.boundingBoxes[animName] = [];
+      
+      frames.forEach((src, index) => {
+        const img = new Image();
+        img.onload = () => {
+          this.imagesLoaded++;
+          console.log(`Image loaded (${this.imagesLoaded}/${this.totalImages}): ${src}`);
+          
+          // Calculate bounding box for this frame
+          const bbox = this.detectBoundingBox(img);
+          this.boundingBoxes[animName][index] = bbox;
+          console.log(`Bounding box for ${animName}[${index}]:`, bbox);
+          
+          if (this.imagesLoaded === this.totalImages) {
+            // All images loaded
+            console.log('All images loaded, canvas size:', this.canvas.width, 'x', this.canvas.height);
+            console.log('Bounding boxes calculated for all frames');
+            this.draw();
+          }
+        };
+        img.onerror = () => {
+          console.error('Failed to load image:', src);
+        };
+        img.src = src;
+        this.images[animName][index] = img;
+      });
     });
   }
   
-  draw() {
-    if (this.images.length === 0 || !this.images[this.currentFrame].complete) return;
+  detectBoundingBox(image) {
+    // Create temporary canvas to analyze image
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCanvas.width = image.width;
+    tempCanvas.height = image.height;
     
+    // Draw image to temp canvas
+    tempCtx.drawImage(image, 0, 0);
+    
+    // Get image data
+    const imageData = tempCtx.getImageData(0, 0, image.width, image.height);
+    const data = imageData.data;
+    
+    let minX = image.width;
+    let minY = image.height;
+    let maxX = 0;
+    let maxY = 0;
+    
+    // Scan for non-transparent pixels
+    for (let y = 0; y < image.height; y++) {
+      for (let x = 0; x < image.width; x++) {
+        const index = (y * image.width + x) * 4;
+        const alpha = data[index + 3];
+        
+        // If pixel is not fully transparent
+        if (alpha > 10) { // Threshold to ignore near-transparent pixels
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    
+    // Return bounding box
+    return {
+      x: minX,
+      y: minY,
+      width: maxX - minX + 1,
+      height: maxY - minY + 1,
+      centerX: minX + (maxX - minX) / 2,
+      centerY: minY + (maxY - minY) / 2
+    };
+  }
+  
+  draw() {
+    const frames = this.images[this.currentState];
+    if (!frames || frames.length === 0 || !frames[this.currentFrame].complete) return;
+    
+    const bboxes = this.boundingBoxes[this.currentState];
+    if (!bboxes || !bboxes[this.currentFrame]) return;
+    
+    // Clear canvas with full transparency
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
-    const currentImage = this.images[this.currentFrame];
+    // Ensure we're using source-over composite mode for proper transparency
+    this.ctx.globalCompositeOperation = 'source-over';
+    
+    const currentImage = frames[this.currentFrame];
+    const bbox = bboxes[this.currentFrame];
+    
+    // Calculate scale to fit character in display area
+    // Use the larger dimension to ensure character fits
+    const scaleX = this.displayWidth / bbox.width;
+    const scaleY = this.displayHeight / bbox.height;
+    const scale = Math.min(scaleX, scaleY) * 0.9; // 0.9 for some padding
+    
+    // Calculate dimensions after scaling
+    const scaledWidth = bbox.width * scale;
+    const scaledHeight = bbox.height * scale;
+    
+    // Center the character in the canvas
+    const offsetX = (this.displayWidth - scaledWidth) / 2;
+    const offsetY = (this.displayHeight - scaledHeight) / 2;
+    
+    // Calculate source rectangle (the bounding box area from original image)
+    const sx = bbox.x;
+    const sy = bbox.y;
+    const sWidth = bbox.width;
+    const sHeight = bbox.height;
     
     // Save context state
     this.ctx.save();
     
     // Mirror horizontally if facing left
     if (!this.facingRight) {
+      this.ctx.translate(this.displayWidth, 0);
       this.ctx.scale(-1, 1);
-      this.ctx.drawImage(
-        currentImage,
-        -this.canvas.width, 0,
-        this.canvas.width, this.canvas.height
-      );
-    } else {
-      this.ctx.drawImage(
-        currentImage,
-        0, 0,
-        this.canvas.width, this.canvas.height
-      );
     }
+    
+    // Draw only the bounding box portion, scaled and centered
+    this.ctx.drawImage(
+      currentImage,
+      sx, sy, sWidth, sHeight,           // Source rectangle (bounding box)
+      offsetX, offsetY, scaledWidth, scaledHeight  // Destination rectangle (centered)
+    );
     
     // Restore context state
     this.ctx.restore();
   }
   
   update() {
-    // Character just animates in place, doesn't move
-    if (this.isWalking) {
-      // Animate sprite (cycle through frames 1, 2, 3)
+    // Animate if current state has multiple frames
+    const frames = this.images[this.currentState];
+    if (frames && frames.length > 1 && this.currentState !== 'standing') {
       this.frameCounter++;
       if (this.frameCounter >= this.frameDelay) {
         this.frameCounter = 0;
-        // Cycle through walking frames (1, 2, 3)
-        this.currentFrame = ((this.currentFrame - 1 + 1) % 3) + 1;
+        this.currentFrame = (this.currentFrame + 1) % frames.length;
       }
-      
+      this.draw();
+    }
+  }
+  
+  isAnimating() {
+    return this.currentState !== 'standing';
+  }
+  
+  setState(state) {
+    if (this.animations[state] && this.currentState !== state) {
+      this.currentState = state;
+      this.currentFrame = 0;
+      this.frameCounter = 0;
       this.draw();
     }
   }
   
   startWalking() {
-    if (!this.isWalking) {
-      this.isWalking = true;
-      // Only set to frame 1 if we're starting from standing
-      if (this.currentFrame === 0) {
-        this.currentFrame = 1;
-      }
-    }
+    this.setState('walking');
   }
   
   stopWalking() {
-    this.isWalking = false;
-    this.currentFrame = 0; // Return to standing frame
-    this.draw();
+    this.setState('standing');
+  }
+  
+  startJumping() {
+    this.setState('jumping');
+  }
+  
+  startSquatting() {
+    this.setState('squatting');
+  }
+  
+  startShowing() {
+    this.setState('showing');
   }
   
   standStill() {
-    // Use this when we actually want to return to standing
-    this.isWalking = false;
-    this.currentFrame = 0;
-    this.draw();
+    this.setState('standing');
   }
   
   reset() {
@@ -189,6 +329,10 @@ class Timeline {
     this.isPaused = false;
     this.pauseStartTime = null;
     this.pauseDuration = 5000; // 5 seconds
+    this.questDismissTimer = null;
+    this.currentQuestMilestone = null;
+    this.isShowingAnimation = false;
+    this.showingAnimationTimer = null;
     
     this.init();
   }
@@ -211,6 +355,81 @@ class Timeline {
     
     // Show welcome card
     this.showWelcomeCard();
+    
+    // Create quest panel
+    this.createQuestPanel();
+  }
+  
+  createQuestPanel() {
+    const panel = document.createElement('div');
+    panel.id = 'questPanel';
+    panel.className = 'hidden absolute';
+    // Position in bottom-right corner of the game container
+    panel.style.cssText = 'bottom: 10px; right: 10px; width: calc(50% - 20px); max-width: 500px; z-index: 50; transition: opacity 0.3s ease-out, transform 0.3s ease-out;';
+    
+    panel.innerHTML = `
+      <div class="bg-gray-900/95 dark:bg-gray-800/95 border-4 border-yellow-500 rounded-lg p-4 shadow-2xl backdrop-blur-sm" style="font-family: 'Courier New', monospace;">
+        <div class="flex items-start gap-3">
+          <img src="/assets/timeline/walking/quest_image.png" alt="Character" 
+            class="w-12 h-12 border-2 border-yellow-500 flex-shrink-0" 
+            style="image-rendering: pixelated; image-rendering: crisp-edges;" />
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-yellow-400 font-bold text-sm">⚔ QUEST DETAILS</h3>
+              <button onclick="document.getElementById('questPanel').classList.add('hidden')" 
+                class="text-yellow-400 hover:text-yellow-300 font-bold text-lg leading-none">✕</button>
+            </div>
+            <div id="questCompany" class="text-white font-bold text-base mb-1"></div>
+            <div id="questTitle" class="text-gray-300 text-xs mb-2"></div>
+            <div id="questDescription" class="text-gray-400 text-xs mb-3 leading-relaxed"></div>
+            <div id="questTechStack" class="mt-2">
+              <div class="text-yellow-400 font-bold text-xs mb-1">🛠 Tech Arsenal:</div>
+              <div id="questTechList" class="flex flex-wrap gap-1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Insert it inside the game container
+    const gameContainer = document.getElementById('gameContainer');
+    if (gameContainer) {
+      gameContainer.appendChild(panel);
+    } else {
+      console.error('Game container not found for quest panel');
+    }
+  }
+  
+  showQuestDetails(milestone) {
+    const panel = document.getElementById('questPanel');
+    if (!panel) return;
+    
+    document.getElementById('questCompany').textContent = milestone.company;
+    document.getElementById('questTitle').textContent = milestone.title;
+    document.getElementById('questDescription').textContent = milestone.description || 'No description available.';
+    
+    const techList = document.getElementById('questTechList');
+    techList.innerHTML = '';
+    if (milestone.techstack && milestone.techstack.length > 0) {
+      milestone.techstack.forEach(tech => {
+        const badge = document.createElement('span');
+        badge.className = 'px-2 py-1 bg-indigo-600 text-white text-xs rounded border border-indigo-400';
+        badge.textContent = tech;
+        techList.appendChild(badge);
+      });
+      document.getElementById('questTechStack').classList.remove('hidden');
+    } else {
+      document.getElementById('questTechStack').classList.add('hidden');
+    }
+    
+    panel.classList.remove('hidden');
+  }
+  
+  hideQuestPanel() {
+    const panel = document.getElementById('questPanel');
+    if (panel && !panel.classList.contains('hidden')) {
+      panel.classList.add('hidden');
+    }
   }
   
   setupManualControls() {
@@ -219,6 +438,8 @@ class Timeline {
     this.baseManualSpeed = 2; // Base speed for manual movement (reduced from 3)
     this.movingLeft = false;
     this.movingRight = false;
+    this.isJumping = false;
+    this.isSquatting = false;
     
     // Listen for D-pad presses
     document.addEventListener('manualControl', (e) => {
@@ -227,23 +448,63 @@ class Timeline {
       if (action === 'right-press') {
         this.movingLeft = true;
         this.isManualMode = true;
-        this.character.setFacing(false); // Face left
-        this.character.startWalking();
+        
+        // Cancel showing animation immediately if user starts moving
+        if (this.isShowingAnimation) {
+          this.cancelShowingAnimation();
+        }
+        
+        if (!this.isJumping && !this.isSquatting) {
+          this.character.setFacing(false); // Face left
+          this.character.startWalking();
+        }
         this.dismissWelcomeCard();
       } else if (action === 'right-release') {
         this.movingLeft = false;
-        if (!this.movingRight) {
+        if (!this.movingRight && !this.isJumping && !this.isSquatting && !this.isShowingAnimation) {
           this.character.stopWalking();
         }
       } else if (action === 'left-press') {
         this.movingRight = true;
         this.isManualMode = true;
-        this.character.setFacing(true); // Face right
-        this.character.startWalking();
+        
+        // Cancel showing animation immediately if user starts moving
+        if (this.isShowingAnimation) {
+          this.cancelShowingAnimation();
+        }
+        
+        if (!this.isJumping && !this.isSquatting) {
+          this.character.setFacing(true); // Face right
+          this.character.startWalking();
+        }
         this.dismissWelcomeCard();
       } else if (action === 'left-release') {
         this.movingRight = false;
-        if (!this.movingLeft) {
+        if (!this.movingLeft && !this.isJumping && !this.isSquatting && !this.isShowingAnimation) {
+          this.character.stopWalking();
+        }
+      } else if (action === 'up-press') {
+        this.isJumping = true;
+        this.isSquatting = false;
+        this.character.startJumping();
+      } else if (action === 'up-release') {
+        this.isJumping = false;
+        // Return to walking or standing based on movement
+        if (this.movingLeft || this.movingRight) {
+          this.character.startWalking();
+        } else {
+          this.character.stopWalking();
+        }
+      } else if (action === 'down-press') {
+        this.isSquatting = true;
+        this.isJumping = false;
+        this.character.startSquatting();
+      } else if (action === 'down-release') {
+        this.isSquatting = false;
+        // Return to walking or standing based on movement
+        if (this.movingLeft || this.movingRight) {
+          this.character.startWalking();
+        } else {
           this.character.stopWalking();
         }
       }
@@ -371,7 +632,7 @@ class Timeline {
   
   createJobCard(milestone, xPosition, worldPosition = null) {
     const card = document.createElement('div');
-    card.className = 'job-card absolute';
+    card.className = 'job-card absolute cursor-pointer';
     card.style.left = xPosition + 'px';
     card.style.bottom = '40px';
     card.style.zIndex = '6';
@@ -432,6 +693,11 @@ class Timeline {
         </div>
       </div>
     `;
+    
+    // Add click handler to show quest details
+    card.addEventListener('click', () => {
+      this.showQuestDetails(milestone);
+    });
     
     document.getElementById('jobCardsContainer').appendChild(card);
     
@@ -540,6 +806,22 @@ class Timeline {
     }
   }
   
+  cancelShowingAnimation() {
+    // Clear the showing animation timer
+    if (this.showingAnimationTimer) {
+      clearTimeout(this.showingAnimationTimer);
+      this.showingAnimationTimer = null;
+    }
+    
+    // Reset the showing animation flag
+    this.isShowingAnimation = false;
+    
+    // Return character to appropriate walking state based on current movement
+    if (this.movingLeft || this.movingRight) {
+      this.character.startWalking();
+    }
+  }
+  
   renderTimelinePoints() {
     const container = document.getElementById('timelinePoints');
     const worldWidth = container.offsetWidth;
@@ -635,6 +917,16 @@ class Timeline {
     this.movingRight = false;
     this.isPaused = false;
     this.pauseStartTime = null;
+    if (this.questDismissTimer) {
+      clearTimeout(this.questDismissTimer);
+      this.questDismissTimer = null;
+    }
+    if (this.showingAnimationTimer) {
+      clearTimeout(this.showingAnimationTimer);
+      this.showingAnimationTimer = null;
+    }
+    this.currentQuestMilestone = null;
+    this.isShowingAnimation = false;
     this.totalDistance = 0;
     this.nextCloudX = 0;
     this.nextTreeX = 0;
@@ -700,6 +992,8 @@ class Timeline {
         this.isPaused = false;
         this.pauseStartTime = null;
         this.character.startWalking();
+        // Hide quest panel when resuming movement
+        this.hideQuestPanel();
       }
     }
     
@@ -805,30 +1099,72 @@ class Timeline {
   checkMilestoneProximity() {
     // Calculate milestone intervals based on distance traveled
     const milestoneInterval = 800; // Distance between milestones
+    const proximityThreshold = 100; // Within 100px of milestone
+    let nearMilestone = false;
     
     // Check each milestone for highlighting when character passes
     for (let i = 0; i < this.milestones.length; i++) {
       const milestoneDistance = (i + 1) * milestoneInterval;
-      const distanceToMilestone = this.manualDistanceTraveled - milestoneDistance;
+      const distanceToMilestone = Math.abs(this.manualDistanceTraveled - milestoneDistance);
       
-      // If we're close to a milestone and haven't visited it yet (moving forward)
-      if (distanceToMilestone >= 0 && distanceToMilestone < 50 && !this.visitedMilestones.has(i)) {
-        this.visitedMilestones.add(i);
-        this.highlightEvent(i);
+      // Check if we're near this milestone
+      if (distanceToMilestone < proximityThreshold) {
+        nearMilestone = true;
         
-        // Pause at milestone if auto-moving
-        if (this.isAutoMoving && !this.isPaused) {
-          this.isPaused = true;
-          this.pauseStartTime = Date.now();
-          this.character.stopWalking();
-          console.log(`Pausing at milestone ${i + 1} for ${this.pauseDuration / 1000} seconds`);
+        // Show quest if we're close and haven't shown it yet for this milestone
+        if (this.currentQuestMilestone !== i) {
+          this.currentQuestMilestone = i;
+          this.showQuestDetails(this.milestones[i]);
+          
+          // Clear any existing dismiss timer
+          if (this.questDismissTimer) {
+            clearTimeout(this.questDismissTimer);
+            this.questDismissTimer = null;
+          }
+        }
+        
+        // Mark as visited if moving forward and close enough
+        if (!this.visitedMilestones.has(i) && this.manualDistanceTraveled >= milestoneDistance) {
+          this.visitedMilestones.add(i);
+          this.highlightEvent(i);
+          
+          // Start showing animation when arriving at milestone
+          if (!this.isShowingAnimation) {
+            this.isShowingAnimation = true;
+            const wasMoving = this.isAutoMoving;
+            this.character.startShowing();
+            
+            // Play showing animation for 2 seconds, then continue
+            if (this.showingAnimationTimer) {
+              clearTimeout(this.showingAnimationTimer);
+            }
+            this.showingAnimationTimer = setTimeout(() => {
+              this.isShowingAnimation = false;
+              
+              // Return to appropriate state after showing
+              if (wasMoving && this.isAutoMoving) {
+                this.character.startWalking();
+              } else if (this.movingLeft || this.movingRight) {
+                this.character.startWalking();
+              } else {
+                this.character.stopWalking();
+              }
+            }, 2000); // 2 seconds for showing animation
+          }
+          
+          // Pause at milestone if auto-moving (after showing animation)
+          if (this.isAutoMoving && !this.isPaused) {
+            this.isPaused = true;
+            this.pauseStartTime = Date.now();
+            console.log(`Pausing at milestone ${i + 1} for ${this.pauseDuration / 1000} seconds`);
+          }
         }
       }
       
       // If moving backward, check if we've moved away from a milestone
       if (this.movingLeft && this.visitedMilestones.has(i)) {
         // If we're now significantly before this milestone, unmark it as visited
-        if (this.manualDistanceTraveled < milestoneDistance - 100) {
+        if (this.manualDistanceTraveled < milestoneDistance - 150) {
           this.visitedMilestones.delete(i);
           // Remove the highlight from the point
           const point = document.getElementById(`point-${i}`);
@@ -837,6 +1173,17 @@ class Timeline {
             point.classList.add('from-yellow-400', 'to-orange-500');
           }
         }
+      }
+    }
+    
+    // If we're not near any milestone, start dismiss timer
+    if (!nearMilestone && this.currentQuestMilestone !== null) {
+      if (!this.questDismissTimer) {
+        this.questDismissTimer = setTimeout(() => {
+          this.hideQuestPanel();
+          this.currentQuestMilestone = null;
+          this.questDismissTimer = null;
+        }, 1000); // 1 second after leaving milestone area
       }
     }
   }

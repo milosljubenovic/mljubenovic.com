@@ -15,7 +15,9 @@ title: Timeline
       position: {{ forloop.index }},
       location: "{{ milestone.location }}",
       logo: {% if milestone.logo %}"{{ milestone.logo }}"{% else %}null{% endif %},
-      company: "{{ milestone.company }}"
+      company: "{{ milestone.company }}",
+      description: "{{ milestone.description | default: '' }}",
+      techstack: [{% for tech in milestone.techstack %}"{{ tech }}"{% unless forloop.last %}, {% endunless %}{% endfor %}]
     }{% unless forloop.last %},{% endunless %}
     {% endfor %}
   ];
@@ -86,7 +88,7 @@ title: Timeline
       </div>
       
       <!-- Character Canvas (Fixed Position) -->
-      <canvas id="characterCanvas" class="absolute z-30" style="bottom: calc(25% - 0.5rem); left: 30%;"></canvas>
+      <canvas id="characterCanvas" class="absolute z-30" style="bottom: calc(25% - 0.5rem); left: 30%; image-rendering: pixelated; image-rendering: crisp-edges; image-rendering: -moz-crisp-edges; image-rendering: -webkit-optimize-contrast; background-color: transparent;"></canvas>
       
       <!-- Progress Bar -->
       <div class="absolute top-4 left-4 right-4 z-30">

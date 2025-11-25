@@ -3,51 +3,69 @@
   location: "Novi Sad"
   logo: "/assets/timeline/companies/rtrk_logo.jpg"
   company: "RT-RK"
+  description: "Developed embedded software for automotive infotainment systems and worked on Linux-based solutions."
+  techstack: ["C++", "Qt", "Linux", "Embedded Systems"]
 
 - year: "2020"
   title: "Aerwave - Platform Development Lead"
   location: "Dallas, TX"
   logo: "/assets/timeline/companies/aerwave_logo.jpeg"
   company: "Aerwave"
+  description: "Led platform development for cloud-based communication solutions, managing a team of developers."
+  techstack: ["React", "Node.js", "AWS", "TypeScript", "WebRTC"]
 
 - year: "2020"
   title: "Clear Moon - CTO"
   location: "Miami, FL"
   logo: "/assets/timeline/companies/clear_moon_logo.jpeg"
   company: "Clear Moon"
+  description: "Established technical strategy and architecture for fintech startup, building from ground up."
+  techstack: ["Python", "Django", "PostgreSQL", "Docker", "Kubernetes"]
 
 - year: "2021"
   title: "Vay - Automotive Software Developer"
   location: "Berlin"
   logo: "/assets/timeline/companies/vay_logo.png"
   company: "Vay"
+  description: "Developed software for autonomous vehicle systems focusing on remote driving technology."
+  techstack: ["C++", "ROS", "Python", "Computer Vision"]
 
 - year: "2023"
   title: "Aerwave - Technical Development Lead"
   location: "Dallas, TX"
   logo: "/assets/timeline/companies/aerwave_logo.jpeg"
   company: "Aerwave"
+  description: "Returned to lead technical development initiatives and scale engineering practices."
+  techstack: ["React", "Node.js", "AWS", "GraphQL", "Microservices"]
 
 - year: "2023"
   title: "Clouddle - Technical Development Lead"
   location: "Florida"
   logo: "/assets/timeline/companies/clouddle_logo.png"
   company: "Clouddle"
+  description: "Led development of cloud infrastructure automation tools and DevOps practices."
+  techstack: ["Terraform", "AWS", "Python", "Go", "CI/CD"]
 
 - year: "2024"
   title: "Adapptiv - Senior Software Engineer"
   location: "London (Remote)"
   logo: null
   company: "Adapptiv"
+  description: "Built scalable backend systems for adaptive learning platforms."
+  techstack: ["Java", "Spring Boot", "Kafka", "MongoDB"]
 
 - year: "2024"
   title: "symphony.is - Senior Software Engineer"
   location: "Niš"
   logo: "/assets/timeline/companies/symphony_logo.png"
   company: "symphony.is"
+  description: "Developed enterprise software solutions with focus on performance and scalability."
+  techstack: ["TypeScript", "NestJS", "PostgreSQL", "Redis"]
 
 - year: "2025"
   title: "tide.co - Senior Software Engineer - PDL III"
   location: "London (Remote)"
   logo: "/assets/timeline/companies/symphony_logo.png"
-  company: "symphony.is"
+  company: "tide.co"
+  description: "Building modern banking infrastructure and financial services platform."
+  techstack: ["TypeScript", "React", "AWS", "Microservices", "DDD"]
