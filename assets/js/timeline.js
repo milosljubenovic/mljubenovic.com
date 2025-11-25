@@ -323,13 +323,25 @@ class Timeline {
     this.clouds = [];
     this.mountains = []; // Parallax mountains
     this.trees = [];
-    this.rocks = [];
     this.jobCards = [];
+    
+    // Environment elements
+    this.grassTufts = [];
+    this.birds = [];
+    this.bushes = [];
+    this.benches = [];
+    this.campfires = [];
+    this.streetlamps = [];
     this.totalDistance = 0;
     this.nextCloudX = 0;
     this.nextMountainX = 0;
     this.nextTreeX = 0;
-    this.nextRockX = 0;
+    this.nextGrassX = 0;
+    this.nextBirdX = 0;
+    this.nextBushX = 0;
+    this.nextBenchX = 0;
+    this.nextCampfireX = 0;
+    this.nextStreetlampX = 0;
     
     // Job card physics
     this.currentJobCard = null;
@@ -595,16 +607,21 @@ class Timeline {
       this.createTree(x);
     }
     
-    // Spawn initial rocks
-    for (let i = 0; i < 3; i++) {
-      const x = containerWidth * 0.4 + (i * containerWidth * 0.25);
-      this.createRock(x);
+    // Spawn initial grass tufts
+    for (let i = 0; i < 8; i++) {
+      const x = containerWidth * 0.1 + (i * containerWidth * 0.12);
+      this.createGrassTuft(x);
     }
     
     this.nextMountainX = 0;
     this.nextCloudX = 0;
     this.nextTreeX = 0;
-    this.nextRockX = 0;
+    this.nextGrassX = 0;
+    this.nextBirdX = 0;
+    this.nextBushX = 0;
+    this.nextBenchX = 0;
+    this.nextCampfireX = 0;
+    this.nextStreetlampX = 0;
   }
   
   spawnAllJobCards() {
@@ -956,24 +973,414 @@ class Timeline {
     console.log('Tree created at x:', xPosition, 'Total trees:', this.trees.length);
   }
   
-  createRock(xPosition) {
-    const rock = document.createElement('div');
-    const size = 20 + Math.random() * 30; // 20-50px
-    const rotation = (Math.random() - 0.5) * 60; // -30 to 30 degrees
-    const hasHighlight = Math.random() > 0.5;
+  createGrassTuft(xPosition) {
+    const grass = document.createElement('div');
+    const bladesCount = 3 + Math.floor(Math.random() * 3); // 3-5 blades
+    const height = 15 + Math.random() * 10; // 15-25px
     
-    rock.className = 'rock absolute';
-    rock.style.left = xPosition + 'px';
-    rock.style.bottom = '0';
-    rock.innerHTML = `
-      <div class="relative">
-        <div class="bg-gradient-to-br from-gray-500 to-gray-700 dark:from-gray-600 dark:to-gray-800 rounded-full shadow-lg" style="width: ${size}px; height: ${size * 0.7}px; transform: rotate(${rotation}deg)"></div>
-        ${hasHighlight ? `<div class="absolute top-1 left-1 w-3 h-2 bg-gray-400/50 dark:bg-gray-500/50 rounded-full"></div>` : ''}
+    grass.className = 'grass-tuft absolute';
+    grass.style.left = xPosition + 'px';
+    grass.style.bottom = '0';
+    grass.style.zIndex = '2';
+    
+    let bladesHTML = '';
+    for (let i = 0; i < bladesCount; i++) {
+      const rotation = (Math.random() - 0.5) * 20; // -10 to 10 degrees
+      const bladeHeight = height * (0.7 + Math.random() * 0.3);
+      const animDelay = Math.random() * 2;
+      bladesHTML += `
+        <div style="
+          position: absolute;
+          left: ${i * 4}px;
+          bottom: 0;
+          width: 2px;
+          height: ${bladeHeight}px;
+          background: linear-gradient(to top, #15803d, #22c55e);
+          border-radius: 1px 1px 0 0;
+          transform-origin: bottom;
+          transform: rotate(${rotation}deg);
+          animation: grassSway ${2 + Math.random()}s ease-in-out ${animDelay}s infinite;
+        "></div>
+      `;
+    }
+    
+    grass.innerHTML = `<div class="relative" style="width: ${bladesCount * 4}px; height: ${height}px;">${bladesHTML}</div>`;
+    
+    document.getElementById('treesContainer').appendChild(grass);
+    this.grassTufts.push({ element: grass, x: xPosition });
+  }
+  
+  createBird(xPosition) {
+    const bird = document.createElement('div');
+    const size = 12 + Math.random() * 8; // 12-20px
+    const top = 30 + Math.random() * 80;
+    const speed = 8 + Math.random() * 12; // 8-20s flight time
+    
+    bird.className = 'bird absolute';
+    bird.style.left = xPosition + 'px';
+    bird.style.top = top + 'px';
+    bird.style.zIndex = '2';
+    
+    // CSS bird with flapping animation
+    bird.innerHTML = `
+      <div style="
+        position: relative;
+        width: ${size}px;
+        height: ${size * 0.6}px;
+        animation: birdFly ${speed}s linear infinite;
+      ">
+        <!-- Body -->
+        <div style="
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          width: ${size * 0.4}px;
+          height: ${size * 0.5}px;
+          background: #000;
+          border-radius: 50%;
+        "></div>
+        <!-- Left wing -->
+        <div style="
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: ${size * 0.5}px;
+          height: ${size * 0.3}px;
+          background: #000;
+          border-radius: 50% 0 0 50%;
+          transform-origin: right center;
+          animation: wingFlap 0.3s ease-in-out infinite;
+        "></div>
+        <!-- Right wing -->
+        <div style="
+          position: absolute;
+          right: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: ${size * 0.5}px;
+          height: ${size * 0.3}px;
+          background: #000;
+          border-radius: 0 50% 50% 0;
+          transform-origin: left center;
+          animation: wingFlap 0.3s ease-in-out infinite 0.15s;
+        "></div>
       </div>
     `;
     
-    document.getElementById('rocksContainer').appendChild(rock);
-    this.rocks.push({ element: rock, x: xPosition });
+    document.getElementById('cloudsContainer').appendChild(bird);
+    this.birds.push({ element: bird, x: xPosition, speed: speed });
+  }
+  
+  createBush(xPosition) {
+    const bush = document.createElement('div');
+    const size = 40 + Math.random() * 30; // 40-70px
+    const hasFlowers = Math.random() > 0.5;
+    
+    bush.className = 'bush absolute';
+    bush.style.left = xPosition + 'px';
+    bush.style.bottom = '0';
+    bush.style.zIndex = '2';
+    
+    let flowersHTML = '';
+    if (hasFlowers) {
+      const flowerCount = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < flowerCount; i++) {
+        const flowerX = 20 + Math.random() * (size - 40);
+        const flowerY = 10 + Math.random() * 20;
+        const colors = ['#ef4444', '#f59e0b', '#ec4899', '#a855f7', '#3b82f6'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        flowersHTML += `
+          <div style="
+            position: absolute;
+            left: ${flowerX}px;
+            top: ${flowerY}px;
+            width: 6px;
+            height: 6px;
+            background: ${color};
+            border-radius: 50%;
+            box-shadow: 0 0 3px ${color};
+          "></div>
+        `;
+      }
+    }
+    
+    bush.innerHTML = `
+      <div class="relative" style="width: ${size}px; height: ${size * 0.7}px;">
+        <!-- Main bush body -->
+        <div style="
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: ${size}px;
+          height: ${size * 0.6}px;
+          background: radial-gradient(ellipse at center, #16a34a, #15803d);
+          border-radius: 50% 50% 45% 45%;
+          box-shadow: inset 0 -5px 10px rgba(0,0,0,0.2);
+        "></div>
+        <!-- Left bump -->
+        <div style="
+          position: absolute;
+          bottom: ${size * 0.2}px;
+          left: 10%;
+          width: ${size * 0.5}px;
+          height: ${size * 0.5}px;
+          background: radial-gradient(ellipse at center, #22c55e, #16a34a);
+          border-radius: 50%;
+        "></div>
+        <!-- Right bump -->
+        <div style="
+          position: absolute;
+          bottom: ${size * 0.15}px;
+          right: 10%;
+          width: ${size * 0.4}px;
+          height: ${size * 0.4}px;
+          background: radial-gradient(ellipse at center, #22c55e, #16a34a);
+          border-radius: 50%;
+        "></div>
+        ${flowersHTML}
+      </div>
+    `;
+    
+    document.getElementById('treesContainer').appendChild(bush);
+    this.bushes.push({ element: bush, x: xPosition });
+  }
+  
+  createBench(xPosition) {
+    const bench = document.createElement('div');
+    
+    bench.className = 'bench absolute';
+    bench.style.left = xPosition + 'px';
+    bench.style.bottom = '0';
+    bench.style.zIndex = '2';
+    
+    bench.innerHTML = `
+      <div class="relative" style="width: 60px; height: 40px;">
+        <!-- Seat -->
+        <div style="
+          position: absolute;
+          bottom: 15px;
+          left: 0;
+          width: 100%;
+          height: 8px;
+          background: linear-gradient(to bottom, #92400e, #78350f);
+          border-radius: 2px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        "></div>
+        <!-- Backrest -->
+        <div style="
+          position: absolute;
+          bottom: 23px;
+          left: 5px;
+          width: 6px;
+          height: 15px;
+          background: linear-gradient(to right, #92400e, #78350f);
+          border-radius: 1px;
+          box-shadow: 2px 0 4px rgba(0,0,0,0.2);
+        "></div>
+        <div style="
+          position: absolute;
+          bottom: 23px;
+          right: 5px;
+          width: 6px;
+          height: 15px;
+          background: linear-gradient(to right, #92400e, #78350f);
+          border-radius: 1px;
+          box-shadow: 2px 0 4px rgba(0,0,0,0.2);
+        "></div>
+        <!-- Left leg -->
+        <div style="
+          position: absolute;
+          bottom: 0;
+          left: 10px;
+          width: 5px;
+          height: 15px;
+          background: linear-gradient(to right, #78350f, #451a03);
+          border-radius: 1px;
+        "></div>
+        <!-- Right leg -->
+        <div style="
+          position: absolute;
+          bottom: 0;
+          right: 10px;
+          width: 5px;
+          height: 15px;
+          background: linear-gradient(to right, #78350f, #451a03);
+          border-radius: 1px;
+        "></div>
+      </div>
+    `;
+    
+    document.getElementById('treesContainer').appendChild(bench);
+    this.benches.push({ element: bench, x: xPosition });
+  }
+  
+  createCampfire(xPosition) {
+    const campfire = document.createElement('div');
+    
+    campfire.className = 'campfire absolute';
+    campfire.style.left = xPosition + 'px';
+    campfire.style.bottom = '5px';
+    campfire.style.zIndex = '2';
+    
+    campfire.innerHTML = `
+      <div class="relative" style="width: 50px; height: 60px;">
+        <!-- Logs -->
+        <div style="
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 40px;
+          height: 8px;
+          background: linear-gradient(to right, #92400e, #78350f, #92400e);
+          border-radius: 2px;
+        "></div>
+        <div style="
+          position: absolute;
+          bottom: 3px;
+          left: 50%;
+          transform: translateX(-50%) rotate(-15deg);
+          width: 35px;
+          height: 7px;
+          background: linear-gradient(to right, #78350f, #451a03, #78350f);
+          border-radius: 2px;
+        "></div>
+        <div style="
+          position: absolute;
+          bottom: 3px;
+          left: 50%;
+          transform: translateX(-50%) rotate(15deg);
+          width: 35px;
+          height: 7px;
+          background: linear-gradient(to right, #78350f, #451a03, #78350f);
+          border-radius: 2px;
+        "></div>
+        <!-- Inner flame (red) -->
+        <div style="
+          position: absolute;
+          bottom: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 12px;
+          height: 20px;
+          background: radial-gradient(ellipse at center bottom, #dc2626, #f97316);
+          border-radius: 50% 50% 30% 30% / 60% 60% 40% 40%;
+          animation: flameFlicker 0.8s ease-in-out infinite;
+          filter: blur(1px);
+        "></div>
+        <!-- Outer flame (orange/yellow) -->
+        <div style="
+          position: absolute;
+          bottom: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 20px;
+          height: 30px;
+          background: radial-gradient(ellipse at center bottom, #f97316, #fbbf24);
+          border-radius: 50% 50% 30% 30% / 60% 60% 40% 40%;
+          animation: flameFlicker 1s ease-in-out infinite 0.2s;
+          filter: blur(2px);
+          opacity: 0.7;
+        "></div>
+        <!-- Glow -->
+        <div style="
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 45px;
+          height: 15px;
+          background: radial-gradient(ellipse at center, rgba(251, 191, 36, 0.3), transparent);
+          border-radius: 50%;
+          animation: glowPulse 1.5s ease-in-out infinite;
+        "></div>
+      </div>
+    `;
+    
+    document.getElementById('treesContainer').appendChild(campfire);
+    this.campfires.push({ element: campfire, x: xPosition });
+  }
+  
+  createStreetlamp(xPosition) {
+    const lamp = document.createElement('div');
+    
+    lamp.className = 'streetlamp absolute';
+    lamp.style.left = xPosition + 'px';
+    lamp.style.bottom = '0';
+    lamp.style.zIndex = '2';
+    
+    lamp.innerHTML = `
+      <div class="relative" style="width: 30px; height: 100px;">
+        <!-- Pole -->
+        <div style="
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 4px;
+          height: 80px;
+          background: linear-gradient(to right, #52525b, #3f3f46);
+          border-radius: 2px;
+          box-shadow: 2px 0 4px rgba(0,0,0,0.3);
+        "></div>
+        <!-- Lamp head bracket -->
+        <div style="
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 12px;
+          height: 3px;
+          background: #3f3f46;
+          border-radius: 1px;
+        "></div>
+        <!-- Lamp head -->
+        <div style="
+          position: absolute;
+          top: 3px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 20px;
+          height: 15px;
+          background: linear-gradient(to bottom, #3f3f46, #27272a);
+          border-radius: 2px 2px 4px 4px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        "></div>
+        <!-- Light glow -->
+        <div style="
+          position: absolute;
+          top: 18px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 30px;
+          height: 30px;
+          background: radial-gradient(circle at center, rgba(250, 204, 21, 0.4), transparent);
+          border-radius: 50%;
+          animation: lampGlow 2s ease-in-out infinite;
+        "></div>
+        <!-- Light beam -->
+        <div style="
+          position: absolute;
+          top: 18px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 40px;
+          height: 60px;
+          background: linear-gradient(to bottom, 
+            rgba(250, 204, 21, 0.15) 0%, 
+            rgba(250, 204, 21, 0.08) 50%, 
+            transparent 100%);
+          clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
+          animation: lampGlow 2s ease-in-out infinite;
+        "></div>
+      </div>
+    `;
+    
+    document.getElementById('treesContainer').appendChild(lamp);
+    this.streetlamps.push({ element: lamp, x: xPosition });
   }
   
   createJobCard(milestone, xPosition, worldPosition = null) {
@@ -1637,8 +2044,23 @@ class Timeline {
     this.trees.forEach(tree => tree.element.remove());
     this.trees = [];
     
-    this.rocks.forEach(rock => rock.element.remove());
-    this.rocks = [];
+    this.grassTufts.forEach(grass => grass.element.remove());
+    this.grassTufts = [];
+    
+    this.birds.forEach(bird => bird.element.remove());
+    this.birds = [];
+    
+    this.bushes.forEach(bush => bush.element.remove());
+    this.bushes = [];
+    
+    this.benches.forEach(bench => bench.element.remove());
+    this.benches = [];
+    
+    this.campfires.forEach(campfire => campfire.element.remove());
+    this.campfires = [];
+    
+    this.streetlamps.forEach(lamp => lamp.element.remove());
+    this.streetlamps = [];
     
     this.jobCards.forEach(card => {
       if (card && card.element && card.element.parentNode) {
@@ -1798,17 +2220,81 @@ class Timeline {
       }
     }
     
-    for (let rock of this.rocks) {
-      rock.x -= speed;
-      rock.element.style.left = rock.x + 'px';
+    // Move grass tufts
+    for (let i = this.grassTufts.length - 1; i >= 0; i--) {
+      const grass = this.grassTufts[i];
+      grass.x -= speed;
+      grass.element.style.left = grass.x + 'px';
       
-      // Only wrap around if not past finish line
-      if (this.manualDistanceTraveled < this.finishLineDistance) {
-        if (rock.x < -50) {
-          rock.x = containerWidth + 50;
-        } else if (rock.x > containerWidth + 50) {
-          rock.x = -50;
-        }
+      // Remove if off screen
+      if (grass.x < -50 || grass.x > containerWidth + 50) {
+        grass.element.remove();
+        this.grassTufts.splice(i, 1);
+      }
+    }
+    
+    // Move birds
+    for (let i = this.birds.length - 1; i >= 0; i--) {
+      const bird = this.birds[i];
+      bird.x -= speed * 0.5; // Birds move slower
+      bird.element.style.left = bird.x + 'px';
+      
+      // Remove if off screen
+      if (bird.x < -100 || bird.x > containerWidth + 100) {
+        bird.element.remove();
+        this.birds.splice(i, 1);
+      }
+    }
+    
+    // Move bushes
+    for (let i = this.bushes.length - 1; i >= 0; i--) {
+      const bush = this.bushes[i];
+      bush.x -= speed;
+      bush.element.style.left = bush.x + 'px';
+      
+      // Remove if off screen
+      if (bush.x < -100 || bush.x > containerWidth + 100) {
+        bush.element.remove();
+        this.bushes.splice(i, 1);
+      }
+    }
+    
+    // Move benches
+    for (let i = this.benches.length - 1; i >= 0; i--) {
+      const bench = this.benches[i];
+      bench.x -= speed;
+      bench.element.style.left = bench.x + 'px';
+      
+      // Remove if off screen
+      if (bench.x < -100 || bench.x > containerWidth + 100) {
+        bench.element.remove();
+        this.benches.splice(i, 1);
+      }
+    }
+    
+    // Move campfires
+    for (let i = this.campfires.length - 1; i >= 0; i--) {
+      const campfire = this.campfires[i];
+      campfire.x -= speed;
+      campfire.element.style.left = campfire.x + 'px';
+      
+      // Remove if off screen
+      if (campfire.x < -100 || campfire.x > containerWidth + 100) {
+        campfire.element.remove();
+        this.campfires.splice(i, 1);
+      }
+    }
+    
+    // Move streetlamps
+    for (let i = this.streetlamps.length - 1; i >= 0; i--) {
+      const lamp = this.streetlamps[i];
+      lamp.x -= speed;
+      lamp.element.style.left = lamp.x + 'px';
+      
+      // Remove if off screen
+      if (lamp.x < -100 || lamp.x > containerWidth + 100) {
+        lamp.element.remove();
+        this.streetlamps.splice(i, 1);
       }
     }
     
@@ -1826,6 +2312,13 @@ class Timeline {
       this.finishLineElement.element.style.left = this.finishLineElement.x + 'px';
     }
     
+    // Calculate progress for conditional spawning
+    const progress = this.finishLineDistance ? (this.manualDistanceTraveled / this.finishLineDistance) * 100 : 0;
+    const isDawn = progress < 25;
+    const isDay = progress >= 25 && progress < 50;
+    const isSunset = progress >= 50 && progress < 75;
+    const isNight = progress >= 75;
+    
     // Spawn new elements if needed (only before finish line)
     if (this.manualDistanceTraveled < this.finishLineDistance) {
       if (this.movingRight) {
@@ -1836,11 +2329,40 @@ class Timeline {
         if (this.clouds.length < 5 && Math.random() < 0.02) {
           this.createCloud(containerWidth + 100);
         }
-        if (this.trees.length < 3 && Math.random() < 0.015) {
+        
+        // Trees - spawn in all time periods
+        if (this.trees.length < 5 && Math.random() < 0.008) {
           this.createTree(containerWidth + 100);
         }
-        if (this.rocks.length < 4 && Math.random() < 0.03) {
-          this.createRock(containerWidth + 50);
+        
+        // Grass - spawn in day and dawn (clear weather)
+        if ((isDawn || isDay) && this.grassTufts.length < 15 && Math.random() < 0.04) {
+          this.createGrassTuft(containerWidth + 50);
+        }
+        
+        // Birds - spawn in dawn and day
+        if ((isDawn || isDay) && this.birds.length < 4 && Math.random() < 0.005) {
+          this.createBird(containerWidth + 100);
+        }
+        
+        // Bushes - spawn in day and sunset
+        if ((isDay || isSunset) && this.bushes.length < 5 && Math.random() < 0.008) {
+          this.createBush(containerWidth + 100);
+        }
+        
+        // Benches - spawn in day (parks)
+        if (isDay && this.benches.length < 3 && Math.random() < 0.004) {
+          this.createBench(containerWidth + 100);
+        }
+        
+        // Campfires - spawn in sunset and night
+        if ((isSunset || isNight) && this.campfires.length < 2 && Math.random() < 0.003) {
+          this.createCampfire(containerWidth + 100);
+        }
+        
+        // Streetlamps - spawn in sunset and night
+        if ((isSunset || isNight) && this.streetlamps.length < 4 && Math.random() < 0.006) {
+          this.createStreetlamp(containerWidth + 100);
         }
       } else if (this.movingLeft) {
         // Moving backward - spawn on the left
@@ -1850,11 +2372,40 @@ class Timeline {
         if (this.clouds.length < 5 && Math.random() < 0.02) {
           this.createCloud(-100);
         }
-        if (this.trees.length < 3 && Math.random() < 0.015) {
+        
+        // Trees - spawn when moving backward
+        if (this.trees.length < 5 && Math.random() < 0.008) {
           this.createTree(-100);
         }
-        if (this.rocks.length < 4 && Math.random() < 0.03) {
-          this.createRock(-50);
+        
+        // Grass - spawn when moving backward in appropriate conditions
+        if ((isDawn || isDay) && this.grassTufts.length < 15 && Math.random() < 0.04) {
+          this.createGrassTuft(-50);
+        }
+        
+        // Birds
+        if ((isDawn || isDay) && this.birds.length < 4 && Math.random() < 0.005) {
+          this.createBird(-100);
+        }
+        
+        // Bushes
+        if ((isDay || isSunset) && this.bushes.length < 5 && Math.random() < 0.008) {
+          this.createBush(-100);
+        }
+        
+        // Benches
+        if (isDay && this.benches.length < 3 && Math.random() < 0.004) {
+          this.createBench(-100);
+        }
+        
+        // Campfires
+        if ((isSunset || isNight) && this.campfires.length < 2 && Math.random() < 0.003) {
+          this.createCampfire(-100);
+        }
+        
+        // Streetlamps
+        if ((isSunset || isNight) && this.streetlamps.length < 4 && Math.random() < 0.006) {
+          this.createStreetlamp(-100);
         }
       }
     }
