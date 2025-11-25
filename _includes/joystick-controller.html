@@ -68,18 +68,18 @@
         
         <!-- Controller Ports (decorative) -->
         <div class="flex justify-center gap-3">
-          <div style="width: 60px; height: 18px; background: linear-gradient(to bottom, #e5e7eb, #d1d5db); border-radius: 4px; border: 2px solid #9ca3af; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);">
-            <div class="flex gap-1 justify-center items-center h-full">
+          <button id="btn-speed-down" class="port-btn" style="width: 60px; height: 18px; background: linear-gradient(to bottom, #e5e7eb, #d1d5db); border-radius: 4px; border: 2px solid #9ca3af; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); cursor: pointer; transition: all 0.1s ease;" aria-label="Decrease Speed">
+            <div class="flex gap-1 justify-center items-center h-full pointer-events-none">
               <div style="width: 8px; height: 10px; background: #1f2937; border-radius: 1px;"></div>
               <div style="width: 8px; height: 10px; background: #1f2937; border-radius: 1px;"></div>
             </div>
-          </div>
-          <div style="width: 60px; height: 18px; background: linear-gradient(to bottom, #e5e7eb, #d1d5db); border-radius: 4px; border: 2px solid #9ca3af; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);">
-            <div class="flex gap-1 justify-center items-center h-full">
+          </button>
+          <button id="btn-speed-up" class="port-btn" style="width: 60px; height: 18px; background: linear-gradient(to bottom, #e5e7eb, #d1d5db); border-radius: 4px; border: 2px solid #9ca3af; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); cursor: pointer; transition: all 0.1s ease;" aria-label="Increase Speed">
+            <div class="flex gap-1 justify-center items-center h-full pointer-events-none">
               <div style="width: 8px; height: 10px; background: #1f2937; border-radius: 1px;"></div>
               <div style="width: 8px; height: 10px; background: #1f2937; border-radius: 1px;"></div>
             </div>
-          </div>
+          </button>
         </div>
         
         <!-- Bottom gray bar -->
@@ -172,6 +172,16 @@
   .start-select-btn:active {
     filter: brightness(0.8);
     transform: scale(0.95) rotate(-25deg);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5) !important;
+  }
+  
+  .port-btn:hover {
+    filter: brightness(1.1);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3), 0 0 0 2px rgba(139, 92, 246, 0.5) !important;
+  }
+  
+  .port-btn:active {
+    filter: brightness(0.8);
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.5) !important;
   }
   
@@ -309,32 +319,45 @@
       document.dispatchEvent(event);
     });
     
+    // Controller Port Buttons - Speed Control
+    document.getElementById('btn-speed-down')?.addEventListener('click', function() {
+      console.log('Speed Down pressed');
+      const event = new CustomEvent('timelineControl', { detail: { action: 'speed-down' } });
+      document.dispatchEvent(event);
+    });
+    
+    document.getElementById('btn-speed-up')?.addEventListener('click', function() {
+      console.log('Speed Up pressed');
+      const event = new CustomEvent('timelineControl', { detail: { action: 'speed-up' } });
+      document.dispatchEvent(event);
+    });
+    
     // Keyboard controls (Arrow keys)
     document.addEventListener('keydown', function(e) {
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        const event = new CustomEvent('manualControl', { detail: { action: 'left-press' } });
-        document.dispatchEvent(event);
-        dpadLeft?.classList.add('ring-2', 'ring-white', 'ring-opacity-50');
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
         const event = new CustomEvent('manualControl', { detail: { action: 'right-press' } });
         document.dispatchEvent(event);
         dpadRight?.classList.add('ring-2', 'ring-white', 'ring-opacity-50');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const event = new CustomEvent('manualControl', { detail: { action: 'left-press' } });
+        document.dispatchEvent(event);
+        dpadLeft?.classList.add('ring-2', 'ring-white', 'ring-opacity-50');
       }
     });
     
     document.addEventListener('keyup', function(e) {
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        const event = new CustomEvent('manualControl', { detail: { action: 'left-release' } });
-        document.dispatchEvent(event);
-        dpadLeft?.classList.remove('ring-2', 'ring-white', 'ring-opacity-50');
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
         const event = new CustomEvent('manualControl', { detail: { action: 'right-release' } });
         document.dispatchEvent(event);
         dpadRight?.classList.remove('ring-2', 'ring-white', 'ring-opacity-50');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const event = new CustomEvent('manualControl', { detail: { action: 'left-release' } });
+        document.dispatchEvent(event);
+        dpadLeft?.classList.remove('ring-2', 'ring-white', 'ring-opacity-50');
       }
     });
   });

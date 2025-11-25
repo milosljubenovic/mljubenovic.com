@@ -17,7 +17,7 @@ class SpriteCharacter {
     // Animation configuration
     this.scale = 1;         // Scale the character
     this.currentFrame = 0;
-    this.frameDelay = 5;    // Frames to wait before switching sprite
+    this.frameDelay = 10;   // Frames to wait before switching sprite (increased from 5)
     this.frameCounter = 0;
     
     // Position (world position, not screen position)
@@ -154,11 +154,11 @@ class Timeline {
     
     this.currentMilestone = 0;
     this.speeds = [
-      { name: 'Slow', value: 0.5 },
+      { name: '0.5x', value: 0.5 },
       { name: 'Normal', value: 1 },
-      { name: 'Fast', value: 2 }
+      { name: '2x', value: 2}
     ];
-    this.currentSpeed = 1;
+    this.currentSpeed = 2; // Start at Slow (0.15x)
     this.worldContainer = document.getElementById('worldContainer');
     this.gameContainer = document.getElementById('gameContainer');
     this.worldOffset = 0;
@@ -180,6 +180,12 @@ class Timeline {
     this.currentJobCard = null;
     this.characterPositionPercent = 30; // Character is at 30% from left
     
+    // Manual movement tracking
+    this.manualDistanceTraveled = 0;
+    this.visitedMilestones = new Set();
+    this.welcomeCard = null;
+    this.welcomeCardDismissed = false;
+    
     this.init();
   }
   
@@ -195,12 +201,18 @@ class Timeline {
     
     // Spawn initial dynamic elements
     this.spawnInitialElements();
+    
+    // Spawn all job cards at their positions in the world
+    this.spawnAllJobCards();
+    
+    // Show welcome card
+    this.showWelcomeCard();
   }
   
   setupManualControls() {
     // Manual movement with D-pad
     this.isManualMode = false;
-    this.manualSpeed = 5;
+    this.baseManualSpeed = 2; // Base speed for manual movement (reduced from 3)
     this.movingLeft = false;
     this.movingRight = false;
     
@@ -213,6 +225,7 @@ class Timeline {
         this.isManualMode = true;
         this.character.setFacing(false); // Face left
         this.character.startWalking();
+        this.dismissWelcomeCard();
       } else if (action === 'right-release') {
         this.movingLeft = false;
         if (!this.movingRight) {
@@ -223,6 +236,7 @@ class Timeline {
         this.isManualMode = true;
         this.character.setFacing(true); // Face right
         this.character.startWalking();
+        this.dismissWelcomeCard();
       } else if (action === 'left-release') {
         this.movingRight = false;
         if (!this.movingLeft) {
@@ -242,8 +256,8 @@ class Timeline {
     }
     
     // Spawn initial trees
-    for (let i = 0; i < 2; i++) {
-      const x = containerWidth * 0.5 + (i * containerWidth * 0.3);
+    for (let i = 0; i < 3; i++) {
+      const x = containerWidth * 0.3 + (i * containerWidth * 0.25);
       this.createTree(x);
     }
     
@@ -256,6 +270,26 @@ class Timeline {
     this.nextCloudX = 0;
     this.nextTreeX = 0;
     this.nextRockX = 0;
+  }
+  
+  spawnAllJobCards() {
+    const containerWidth = this.gameContainer.offsetWidth;
+    const characterX = containerWidth * (this.characterPositionPercent / 100);
+    const milestoneInterval = 800;
+    
+    // Create all job cards at their milestone positions
+    this.milestones.forEach((milestone, index) => {
+      // Calculate world position: character starts at characterX, first milestone is 800px away
+      const worldPosition = (index + 1) * milestoneInterval;
+      const cardX = characterX + worldPosition;
+      
+      const jobCard = this.createJobCard(milestone, cardX, worldPosition);
+      jobCard.milestoneIndex = index;
+      jobCard.isPermanent = true; // Mark as permanent world element
+      this.jobCards.push(jobCard);
+    });
+    
+    console.log('Spawned', this.jobCards.length, 'job cards in the world');
   }
   
   createCloud(xPosition) {
@@ -294,7 +328,7 @@ class Timeline {
     
     tree.className = 'tree absolute';
     tree.style.left = xPosition + 'px';
-    tree.style.bottom = '25%';
+    tree.style.bottom = '0';
     tree.style.zIndex = '5';
     tree.innerHTML = `
       <div class="relative" style="height: ${height}px">
@@ -308,6 +342,7 @@ class Timeline {
     
     document.getElementById('treesContainer').appendChild(tree);
     this.trees.push({ element: tree, x: xPosition });
+    console.log('Tree created at x:', xPosition, 'Total trees:', this.trees.length);
   }
   
   createRock(xPosition) {
@@ -330,7 +365,7 @@ class Timeline {
     this.rocks.push({ element: rock, x: xPosition });
   }
   
-  createJobCard(milestone, xPosition) {
+  createJobCard(milestone, xPosition, worldPosition = null) {
     const card = document.createElement('div');
     card.className = 'job-card absolute';
     card.style.left = xPosition + 'px';
@@ -400,14 +435,105 @@ class Timeline {
     return { 
       element: card, 
       x: xPosition, 
+      worldPosition: worldPosition !== null ? worldPosition : this.manualDistanceTraveled,
       velocity: 0,
       acceleration: -0.5, // Negative to move left
       maxVelocity: -8,
       friction: 0.98,
       targetX: null,
       isDecelerating: false,
-      milestone: milestone 
+      isPermanent: false, // Will be set to true for world-spawned cards
+      milestone: milestone,
+      milestoneIndex: this.milestones.indexOf(milestone)
     };
+  }
+  
+  showWelcomeCard() {
+    const containerWidth = this.gameContainer.offsetWidth;
+    const characterX = containerWidth * (this.characterPositionPercent / 100);
+    const cardWidth = 300;
+    const xPosition = characterX + cardWidth + 20;
+    
+    const card = document.createElement('div');
+    card.id = 'welcomeCard';
+    card.className = 'job-card absolute';
+    card.style.left = xPosition + 'px';
+    card.style.bottom = '40px';
+    card.style.zIndex = '6';
+    card.style.imageRendering = 'pixelated';
+    card.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+    
+    card.innerHTML = `
+      <div class="relative" style="width: 280px; animation: cardFloat 3s ease-in-out infinite;">
+        <!-- 8-bit border frame -->
+        <div class="absolute inset-0 bg-gray-900 dark:bg-gray-100" style="clip-path: polygon(
+          0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+          100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%,
+          8px calc(100% - 8px), 0 calc(100% - 8px)
+        );"></div>
+        
+        <!-- Inner content -->
+        <div class="relative bg-white dark:bg-gray-800 m-2 p-4" style="
+          clip-path: polygon(
+            0 6px, 6px 6px, 6px 0, calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px,
+            100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%,
+            6px calc(100% - 6px), 0 calc(100% - 6px)
+          );
+          box-shadow: inset 4px 4px 0 rgba(0,0,0,0.2), inset -4px -4px 0 rgba(255,255,255,0.1);
+        ">
+          <!-- Welcome Icon -->
+          <div class="flex items-start gap-3 mb-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 border-2 border-gray-900 dark:border-gray-100 flex items-center justify-center">
+              <span class="text-white text-2xl" style="font-family: 'Courier New', monospace;">🎮</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-bold text-gray-900 dark:text-white" style="font-family: 'Courier New', monospace;">Welcome!</div>
+              <div class="text-xs text-yellow-500 font-bold" style="font-family: 'Courier New', monospace; text-shadow: 2px 2px 0 rgba(0,0,0,0.3);">Career Journey</div>
+            </div>
+          </div>
+          
+          <!-- Instructions -->
+          <div class="text-xs text-gray-700 dark:text-gray-300 mb-2 leading-relaxed" style="font-family: 'Courier New', monospace;">
+            <div class="mb-2">🕹️ Use the NES controller below to navigate:</div>
+            <div class="ml-3 space-y-1">
+              <div>• D-Pad ←→: Move character</div>
+              <div>• START: Begin journey</div>
+              <div>• A: Next milestone</div>
+              <div>• B: Reset</div>
+              <div>• Port buttons: Adjust speed</div>
+            </div>
+          </div>
+          
+          <!-- Call to action -->
+          <div class="text-center mt-3 text-xs font-bold text-purple-600 dark:text-purple-400" style="font-family: 'Courier New', monospace;">
+            Press START to begin!
+          </div>
+          
+          <!-- 8-bit corner decorations -->
+          <div class="absolute top-1 left-1 w-2 h-2 bg-purple-400"></div>
+          <div class="absolute top-1 right-1 w-2 h-2 bg-purple-400"></div>
+          <div class="absolute bottom-1 left-1 w-2 h-2 bg-purple-400"></div>
+          <div class="absolute bottom-1 right-1 w-2 h-2 bg-purple-400"></div>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('jobCardsContainer').appendChild(card);
+    this.welcomeCard = card;
+  }
+  
+  dismissWelcomeCard() {
+    if (this.welcomeCard && !this.welcomeCardDismissed) {
+      this.welcomeCardDismissed = true;
+      this.welcomeCard.style.opacity = '0';
+      this.welcomeCard.style.transform = 'translateY(-20px)';
+      setTimeout(() => {
+        if (this.welcomeCard && this.welcomeCard.parentNode) {
+          this.welcomeCard.remove();
+          this.welcomeCard = null;
+        }
+      }, 500);
+    }
   }
   
   renderTimelinePoints() {
@@ -458,10 +584,8 @@ class Timeline {
       const milestone = this.milestones[this.currentMilestone];
       console.log('Going to milestone:', milestone.title);
       
-      // Spawn the job card from the right side
-      const containerWidth = this.gameContainer.offsetWidth;
-      this.currentJobCard = this.createJobCard(milestone, containerWidth + 100);
-      this.jobCards.push(this.currentJobCard);
+      // Dismiss welcome card when auto journey starts
+      this.dismissWelcomeCard();
       
       // Start animations
       this.isScrolling = true;
@@ -477,7 +601,10 @@ class Timeline {
   
   updateProgress() {
     const progressBar = document.getElementById('progressBar');
-    const progress = (this.currentMilestone / this.milestones.length) * 100;
+    // Calculate progress based on distance traveled
+    const milestoneInterval = 800;
+    const totalDistance = this.milestones.length * milestoneInterval;
+    const progress = Math.min(100, Math.max(0, (this.manualDistanceTraveled / totalDistance) * 100));
     progressBar.style.width = progress + '%';
   }
   
@@ -505,6 +632,9 @@ class Timeline {
     this.nextCloudX = 0;
     this.nextTreeX = 0;
     this.nextRockX = 0;
+    this.manualDistanceTraveled = 0;
+    this.visitedMilestones.clear();
+    this.welcomeCardDismissed = false;
     const progressBar = document.getElementById('progressBar');
     progressBar.style.width = '0%';
     
@@ -518,8 +648,23 @@ class Timeline {
     this.rocks.forEach(rock => rock.element.remove());
     this.rocks = [];
     
+    this.jobCards.forEach(card => {
+      if (card && card.element && card.element.parentNode) {
+        card.element.remove();
+      }
+    });
+    this.jobCards = [];
+    this.currentJobCard = null;
+    
+    if (this.welcomeCard && this.welcomeCard.parentNode) {
+      this.welcomeCard.remove();
+      this.welcomeCard = null;
+    }
+    
     // Respawn initial elements
     this.spawnInitialElements();
+    this.spawnAllJobCards();
+    this.showWelcomeCard();
     
     // Reset timeline points
     const points = document.querySelectorAll('#timelinePoints > div');
@@ -542,13 +687,14 @@ class Timeline {
     
     // Manual character movement
     if (this.isManualMode && (this.movingLeft || this.movingRight)) {
-      const speed = this.movingRight ? this.manualSpeed : -this.manualSpeed;
+      const currentSpeedMultiplier = this.speeds[this.currentSpeed].value;
+      const speed = (this.movingRight ? this.baseManualSpeed : -this.baseManualSpeed) * currentSpeedMultiplier;
       this.updateManualMovement(speed);
     }
     
-    // Update job card physics
+    // Update job card physics (but don't stop character in manual mode)
     if (this.currentJobCard) {
-      this.updateJobCardPhysics();
+      this.updateJobCardPhysics(!this.isManualMode); // Pass flag to control stopping
     }
     
     if (this.isScrolling) {
@@ -560,6 +706,19 @@ class Timeline {
   
   updateManualMovement(speed) {
     const containerWidth = this.gameContainer.offsetWidth;
+    
+    // Track distance traveled (can go backward)
+    if (this.movingRight) {
+      this.manualDistanceTraveled += Math.abs(speed);
+    } else if (this.movingLeft) {
+      this.manualDistanceTraveled = Math.max(0, this.manualDistanceTraveled - Math.abs(speed));
+    }
+    
+    // Update progress bar based on current position
+    this.updateProgress();
+    
+    // Check if we've reached any milestone distances
+    this.checkMilestoneProximity();
     
     // Move all elements (clouds, trees, rocks) to create movement effect
     // When moving right (forward), world moves left (negative)
@@ -600,13 +759,21 @@ class Timeline {
       }
     }
     
+    // Move job cards with character movement
+    for (let jobCard of this.jobCards) {
+      if (jobCard && jobCard.element && jobCard.element.parentNode) {
+        jobCard.x -= speed;
+        jobCard.element.style.left = jobCard.x + 'px';
+      }
+    }
+    
     // Spawn new elements if needed
     if (this.movingRight) {
       // Moving forward - spawn on the right
       if (this.clouds.length < 5 && Math.random() < 0.02) {
         this.createCloud(containerWidth + 100);
       }
-      if (this.trees.length < 2 && Math.random() < 0.01) {
+      if (this.trees.length < 3 && Math.random() < 0.015) {
         this.createTree(containerWidth + 100);
       }
       if (this.rocks.length < 4 && Math.random() < 0.03) {
@@ -617,7 +784,7 @@ class Timeline {
       if (this.clouds.length < 5 && Math.random() < 0.02) {
         this.createCloud(-100);
       }
-      if (this.trees.length < 2 && Math.random() < 0.01) {
+      if (this.trees.length < 3 && Math.random() < 0.015) {
         this.createTree(-100);
       }
       if (this.rocks.length < 4 && Math.random() < 0.03) {
@@ -626,7 +793,53 @@ class Timeline {
     }
   }
   
-  updateJobCardPhysics() {
+  checkMilestoneProximity() {
+    // Calculate milestone intervals based on distance traveled
+    const milestoneInterval = 800; // Distance between milestones
+    
+    // Check each milestone for highlighting when character passes
+    for (let i = 0; i < this.milestones.length; i++) {
+      const milestoneDistance = (i + 1) * milestoneInterval;
+      const distanceToMilestone = this.manualDistanceTraveled - milestoneDistance;
+      
+      // If we're close to a milestone and haven't visited it yet (moving forward)
+      if (distanceToMilestone >= 0 && distanceToMilestone < 50 && !this.visitedMilestones.has(i)) {
+        this.visitedMilestones.add(i);
+        this.highlightEvent(i);
+      }
+      
+      // If moving backward, check if we've moved away from a milestone
+      if (this.movingLeft && this.visitedMilestones.has(i)) {
+        // If we're now significantly before this milestone, unmark it as visited
+        if (this.manualDistanceTraveled < milestoneDistance - 100) {
+          this.visitedMilestones.delete(i);
+          // Remove the highlight from the point
+          const point = document.getElementById(`point-${i}`);
+          if (point) {
+            point.classList.remove('from-green-400', 'to-emerald-500', 'ring-4', 'ring-green-300');
+            point.classList.add('from-yellow-400', 'to-orange-500');
+          }
+        }
+      }
+    }
+  }
+  
+  triggerMilestoneCard(milestoneIndex) {
+    // Cards already exist in the world, this method is kept for compatibility
+    const milestone = this.milestones[milestoneIndex];
+    console.log('Reached milestone:', milestone.title);
+    
+    // Highlight the milestone
+    this.highlightEvent(milestoneIndex);
+    
+    // Update progress
+    if (milestoneIndex + 1 > this.currentMilestone) {
+      this.currentMilestone = milestoneIndex + 1;
+      this.updateProgress();
+    }
+  }
+  
+  updateJobCardPhysics(shouldStopCharacter = true) {
     const card = this.currentJobCard;
     const containerWidth = this.gameContainer.offsetWidth;
     const characterX = containerWidth * (this.characterPositionPercent / 100);
@@ -652,13 +865,16 @@ class Timeline {
         card.velocity = dx * 0.08; // Smooth spring-like motion
         card.x += card.velocity;
       } else {
-        // Snap to final position and stop
+        // Snap to final position and complete milestone
         card.x = card.targetX;
         card.velocity = 0;
         
-        // Stop character and complete milestone
-        this.isScrolling = false;
-        this.character.stopWalking();
+        // Only stop character and scrolling if not in manual mode
+        if (shouldStopCharacter) {
+          this.isScrolling = false;
+          this.character.stopWalking();
+        }
+        
         this.highlightEvent(this.currentMilestone - 1);
         this.updateProgress();
         this.currentJobCard = null; // Clear reference
@@ -676,7 +892,7 @@ class Timeline {
   }
   
   updateInfiniteElements() {
-    const speed = this.speeds[this.currentSpeed].value * 5;
+    const speed = this.speeds[this.currentSpeed].value * 3; // Reduced multiplier from 5 to 3
     this.totalDistance += speed;
     const containerWidth = this.gameContainer.offsetWidth;
     
@@ -783,6 +999,32 @@ window.addEventListener('load', () => {
         const speedText = document.getElementById('speedText');
         if (speedText) {
           speedText.textContent = `Speed: ${speed.name}`;
+        }
+        break;
+        
+      case 'speed-up':
+        // Increase speed
+        if (timeline.currentSpeed < timeline.speeds.length - 1) {
+          timeline.currentSpeed++;
+          const speed = timeline.speeds[timeline.currentSpeed];
+          const speedText = document.getElementById('speedText');
+          if (speedText) {
+            speedText.textContent = `Speed: ${speed.name}`;
+          }
+          console.log('Speed increased to:', speed.name);
+        }
+        break;
+        
+      case 'speed-down':
+        // Decrease speed
+        if (timeline.currentSpeed > 0) {
+          timeline.currentSpeed--;
+          const speed = timeline.speeds[timeline.currentSpeed];
+          const speedText = document.getElementById('speedText');
+          if (speedText) {
+            speedText.textContent = `Speed: ${speed.name}`;
+          }
+          console.log('Speed decreased to:', speed.name);
         }
         break;
         
