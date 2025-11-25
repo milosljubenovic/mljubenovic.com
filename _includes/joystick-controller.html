@@ -201,31 +201,82 @@
       }, 200);
     }
     
-    // D-Pad Controls
+    // D-Pad Controls with press/release for manual movement
+    const dpadLeft = document.getElementById('dpad-left');
+    const dpadRight = document.getElementById('dpad-right');
+    
+    // Left button - manual movement
+    dpadLeft?.addEventListener('mousedown', function() {
+      console.log('D-Pad Left pressed - Move character left');
+      buttonFeedback(this);
+      const event = new CustomEvent('manualControl', { detail: { action: 'left-press' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadLeft?.addEventListener('mouseup', function() {
+      const event = new CustomEvent('manualControl', { detail: { action: 'left-release' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadLeft?.addEventListener('mouseleave', function() {
+      const event = new CustomEvent('manualControl', { detail: { action: 'left-release' } });
+      document.dispatchEvent(event);
+    });
+    
+    // Right button - manual movement
+    dpadRight?.addEventListener('mousedown', function() {
+      console.log('D-Pad Right pressed - Move character right');
+      buttonFeedback(this);
+      const event = new CustomEvent('manualControl', { detail: { action: 'right-press' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadRight?.addEventListener('mouseup', function() {
+      const event = new CustomEvent('manualControl', { detail: { action: 'right-release' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadRight?.addEventListener('mouseleave', function() {
+      const event = new CustomEvent('manualControl', { detail: { action: 'right-release' } });
+      document.dispatchEvent(event);
+    });
+    
+    // Touch events for mobile
+    dpadLeft?.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      buttonFeedback(this);
+      const event = new CustomEvent('manualControl', { detail: { action: 'left-press' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadLeft?.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      const event = new CustomEvent('manualControl', { detail: { action: 'left-release' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadRight?.addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      buttonFeedback(this);
+      const event = new CustomEvent('manualControl', { detail: { action: 'right-press' } });
+      document.dispatchEvent(event);
+    });
+    
+    dpadRight?.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      const event = new CustomEvent('manualControl', { detail: { action: 'right-release' } });
+      document.dispatchEvent(event);
+    });
+    
+    // Up/Down for future features
     document.getElementById('dpad-up')?.addEventListener('click', function() {
       console.log('D-Pad Up pressed');
       buttonFeedback(this);
-      // Reserved for future features
     });
     
     document.getElementById('dpad-down')?.addEventListener('click', function() {
       console.log('D-Pad Down pressed');
       buttonFeedback(this);
-      // Reserved for future features
-    });
-    
-    document.getElementById('dpad-left')?.addEventListener('click', function() {
-      console.log('D-Pad Left pressed - Rewind');
-      buttonFeedback(this);
-      const event = new CustomEvent('timelineControl', { detail: { action: 'rewind' } });
-      document.dispatchEvent(event);
-    });
-    
-    document.getElementById('dpad-right')?.addEventListener('click', function() {
-      console.log('D-Pad Right pressed - Forward');
-      buttonFeedback(this);
-      const event = new CustomEvent('timelineControl', { detail: { action: 'forward' } });
-      document.dispatchEvent(event);
     });
     
     // Action Buttons
@@ -256,6 +307,35 @@
       buttonFeedback(this);
       const event = new CustomEvent('timelineControl', { detail: { action: 'speed' } });
       document.dispatchEvent(event);
+    });
+    
+    // Keyboard controls (Arrow keys)
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const event = new CustomEvent('manualControl', { detail: { action: 'left-press' } });
+        document.dispatchEvent(event);
+        dpadLeft?.classList.add('ring-2', 'ring-white', 'ring-opacity-50');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const event = new CustomEvent('manualControl', { detail: { action: 'right-press' } });
+        document.dispatchEvent(event);
+        dpadRight?.classList.add('ring-2', 'ring-white', 'ring-opacity-50');
+      }
+    });
+    
+    document.addEventListener('keyup', function(e) {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const event = new CustomEvent('manualControl', { detail: { action: 'left-release' } });
+        document.dispatchEvent(event);
+        dpadLeft?.classList.remove('ring-2', 'ring-white', 'ring-opacity-50');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const event = new CustomEvent('manualControl', { detail: { action: 'right-release' } });
+        document.dispatchEvent(event);
+        dpadRight?.classList.remove('ring-2', 'ring-white', 'ring-opacity-50');
+      }
     });
   });
 </script>

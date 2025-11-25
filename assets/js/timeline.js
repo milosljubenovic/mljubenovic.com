@@ -26,6 +26,7 @@ class SpriteCharacter {
     this.speed = 3;
     this.speedMultiplier = 1;
     this.isWalking = false;
+    this.facingRight = true; // Track direction character is facing
     
     // Load all frame images
     this.loadImages();
@@ -61,11 +62,28 @@ class SpriteCharacter {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
     const currentImage = this.images[this.currentFrame];
-    this.ctx.drawImage(
-      currentImage,
-      0, 0,
-      this.canvas.width, this.canvas.height
-    );
+    
+    // Save context state
+    this.ctx.save();
+    
+    // Mirror horizontally if facing left
+    if (!this.facingRight) {
+      this.ctx.scale(-1, 1);
+      this.ctx.drawImage(
+        currentImage,
+        -this.canvas.width, 0,
+        this.canvas.width, this.canvas.height
+      );
+    } else {
+      this.ctx.drawImage(
+        currentImage,
+        0, 0,
+        this.canvas.width, this.canvas.height
+      );
+    }
+    
+    // Restore context state
+    this.ctx.restore();
   }
   
   update() {
@@ -112,6 +130,13 @@ class SpriteCharacter {
   
   setSpeed(multiplier) {
     this.speedMultiplier = multiplier;
+  }
+  
+  setFacing(facingRight) {
+    if (this.facingRight !== facingRight) {
+      this.facingRight = facingRight;
+      this.draw();
+    }
   }
 }
 
@@ -164,11 +189,47 @@ class Timeline {
     console.log('Game container:', this.gameContainer);
     this.renderTimelinePoints();
     this.setupControls();
+    this.setupManualControls();
     this.animate();
     console.log('Timeline initialized with', this.milestones.length, 'milestones');
     
     // Spawn initial dynamic elements
     this.spawnInitialElements();
+  }
+  
+  setupManualControls() {
+    // Manual movement with D-pad
+    this.isManualMode = false;
+    this.manualSpeed = 5;
+    this.movingLeft = false;
+    this.movingRight = false;
+    
+    // Listen for D-pad presses
+    document.addEventListener('manualControl', (e) => {
+      const action = e.detail.action;
+      
+      if (action === 'right-press') {
+        this.movingLeft = true;
+        this.isManualMode = true;
+        this.character.setFacing(false); // Face left
+        this.character.startWalking();
+      } else if (action === 'right-release') {
+        this.movingLeft = false;
+        if (!this.movingRight) {
+          this.character.stopWalking();
+        }
+      } else if (action === 'left-press') {
+        this.movingRight = true;
+        this.isManualMode = true;
+        this.character.setFacing(true); // Face right
+        this.character.startWalking();
+      } else if (action === 'left-release') {
+        this.movingRight = false;
+        if (!this.movingLeft) {
+          this.character.stopWalking();
+        }
+      }
+    });
   }
   
   spawnInitialElements() {
@@ -479,6 +540,12 @@ class Timeline {
   animate() {
     this.character.update();
     
+    // Manual character movement
+    if (this.isManualMode && (this.movingLeft || this.movingRight)) {
+      const speed = this.movingRight ? this.manualSpeed : -this.manualSpeed;
+      this.updateManualMovement(speed);
+    }
+    
     // Update job card physics
     if (this.currentJobCard) {
       this.updateJobCardPhysics();
@@ -489,6 +556,74 @@ class Timeline {
     }
     
     requestAnimationFrame(() => this.animate());
+  }
+  
+  updateManualMovement(speed) {
+    const containerWidth = this.gameContainer.offsetWidth;
+    
+    // Move all elements (clouds, trees, rocks) to create movement effect
+    // When moving right (forward), world moves left (negative)
+    // When moving left (backward), world moves right (positive)
+    for (let cloud of this.clouds) {
+      cloud.x -= speed * 0.3; // Slower for parallax
+      cloud.element.style.left = cloud.x + 'px';
+      
+      // Wrap around if off screen
+      if (cloud.x < -100) {
+        cloud.x = containerWidth + 100;
+      } else if (cloud.x > containerWidth + 100) {
+        cloud.x = -100;
+      }
+    }
+    
+    for (let tree of this.trees) {
+      tree.x -= speed;
+      tree.element.style.left = tree.x + 'px';
+      
+      // Wrap around if off screen
+      if (tree.x < -100) {
+        tree.x = containerWidth + 100;
+      } else if (tree.x > containerWidth + 100) {
+        tree.x = -100;
+      }
+    }
+    
+    for (let rock of this.rocks) {
+      rock.x -= speed;
+      rock.element.style.left = rock.x + 'px';
+      
+      // Wrap around if off screen
+      if (rock.x < -50) {
+        rock.x = containerWidth + 50;
+      } else if (rock.x > containerWidth + 50) {
+        rock.x = -50;
+      }
+    }
+    
+    // Spawn new elements if needed
+    if (this.movingRight) {
+      // Moving forward - spawn on the right
+      if (this.clouds.length < 5 && Math.random() < 0.02) {
+        this.createCloud(containerWidth + 100);
+      }
+      if (this.trees.length < 2 && Math.random() < 0.01) {
+        this.createTree(containerWidth + 100);
+      }
+      if (this.rocks.length < 4 && Math.random() < 0.03) {
+        this.createRock(containerWidth + 50);
+      }
+    } else if (this.movingLeft) {
+      // Moving backward - spawn on the left
+      if (this.clouds.length < 5 && Math.random() < 0.02) {
+        this.createCloud(-100);
+      }
+      if (this.trees.length < 2 && Math.random() < 0.01) {
+        this.createTree(-100);
+      }
+      if (this.rocks.length < 4 && Math.random() < 0.03) {
+        this.createRock(-50);
+      }
+    }
   }
   
   updateJobCardPhysics() {
