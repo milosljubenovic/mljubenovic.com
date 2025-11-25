@@ -361,6 +361,10 @@ class Timeline {
     this.walkStepCounter = 0; // Track steps for walk sound
     this.soundMuted = true; // Sound toggle state (muted by default)
     
+    // Sky color transitions
+    this.skyElement = null;
+    this.currentSkyColors = { top: '#e0f2fe', bottom: '#bae6fd' }; // Start with dawn
+    
     this.init();
   }
   
@@ -371,6 +375,13 @@ class Timeline {
     this.renderTimelinePoints();
     this.setupControls();
     this.setupManualControls();
+    
+    // Get sky element reference
+    this.skyElement = document.getElementById('dynamicSky');
+    if (this.skyElement) {
+      this.updateSkyColor();
+    }
+    
     this.animate();
     console.log('Timeline initialized with', this.milestones.length, 'milestones');
     
@@ -1253,6 +1264,123 @@ class Timeline {
       const progress = Math.min(100, Math.max(0, (this.manualDistanceTraveled / totalDistance) * 100));
       progressBar.style.width = progress + '%';
     }
+    
+    // Update sky color based on progress
+    this.updateSkyColor();
+  }
+  
+  updateSkyColor() {
+    if (!this.skyElement || !this.finishLineDistance) return;
+    
+    // Calculate progress percentage
+    const progress = Math.min(100, (this.manualDistanceTraveled / this.finishLineDistance) * 100);
+    
+    // Define sky color stages based on years
+    const stages = [
+      { percent: 0, name: 'dawn', top: '#fbbf24', bottom: '#fb923c' },      // 2019: Dawn (orange/amber)
+      { percent: 33, name: 'day', top: '#60a5fa', bottom: '#93c5fd' },      // 2021: Day (bright blue)
+      { percent: 66, name: 'sunset', top: '#c084fc', bottom: '#f97316' },   // 2023: Sunset (purple/orange)
+      { percent: 100, name: 'night', top: '#1e3a8a', bottom: '#3730a3' }    // 2025: Night (dark blue)
+    ];
+    
+    // Find which stage we're in
+    let currentStage = stages[0];
+    let nextStage = stages[1];
+    
+    for (let i = 0; i < stages.length - 1; i++) {
+      if (progress >= stages[i].percent && progress < stages[i + 1].percent) {
+        currentStage = stages[i];
+        nextStage = stages[i + 1];
+        break;
+      }
+    }
+    
+    if (progress >= stages[stages.length - 1].percent) {
+      currentStage = stages[stages.length - 1];
+      nextStage = stages[stages.length - 1];
+    }
+    
+    // Calculate interpolation factor
+    const stageProgress = (progress - currentStage.percent) / (nextStage.percent - currentStage.percent);
+    const smoothProgress = Math.max(0, Math.min(1, stageProgress));
+    
+    // Interpolate between colors
+    const topColor = this.interpolateColor(currentStage.top, nextStage.top, smoothProgress);
+    const bottomColor = this.interpolateColor(currentStage.bottom, nextStage.bottom, smoothProgress);
+    
+    // Apply gradient
+    this.skyElement.style.background = `linear-gradient(to bottom, ${topColor}, ${bottomColor})`;
+    this.currentSkyColors = { top: topColor, bottom: bottomColor };
+    
+    // Add stars for night (when progress > 80%)
+    if (progress > 80 && !document.getElementById('stars')) {
+      this.addStars();
+    } else if (progress <= 80) {
+      const stars = document.getElementById('stars');
+      if (stars) stars.remove();
+    }
+  }
+  
+  interpolateColor(color1, color2, factor) {
+    // Parse hex colors
+    const c1 = {
+      r: parseInt(color1.slice(1, 3), 16),
+      g: parseInt(color1.slice(3, 5), 16),
+      b: parseInt(color1.slice(5, 7), 16)
+    };
+    const c2 = {
+      r: parseInt(color2.slice(1, 3), 16),
+      g: parseInt(color2.slice(3, 5), 16),
+      b: parseInt(color2.slice(5, 7), 16)
+    };
+    
+    // Interpolate
+    const r = Math.round(c1.r + (c2.r - c1.r) * factor);
+    const g = Math.round(c1.g + (c2.g - c1.g) * factor);
+    const b = Math.round(c1.b + (c2.b - c1.b) * factor);
+    
+    // Convert back to hex
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+  
+  addStars() {
+    const starsContainer = document.createElement('div');
+    starsContainer.id = 'stars';
+    starsContainer.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 75%;
+      pointer-events: none;
+      z-index: 1;
+    `;
+    
+    // Create 50 stars
+    for (let i = 0; i < 50; i++) {
+      const star = document.createElement('div');
+      const size = Math.random() * 2 + 1;
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const opacity = Math.random() * 0.5 + 0.3;
+      const delay = Math.random() * 3;
+      
+      star.style.cssText = `
+        position: absolute;
+        left: ${x}%;
+        top: ${y}%;
+        width: ${size}px;
+        height: ${size}px;
+        background: white;
+        border-radius: 50%;
+        opacity: ${opacity};
+        animation: twinkle 2s ease-in-out ${delay}s infinite;
+      `;
+      
+      starsContainer.appendChild(star);
+    }
+    
+    this.skyElement.appendChild(starsContainer);
   }
   
   highlightEvent(index) {

@@ -68,8 +68,8 @@ title: Timeline
       
       <!-- Scrolling World Container -->
       <div id="worldContainer" class="absolute inset-0">
-        <!-- Sky Background (static) -->
-        <div class="absolute top-0 left-0 w-full h-3/4 bg-gradient-to-b from-sky-200 to-sky-100 dark:from-sky-900 dark:to-sky-800" style="z-index: 1;"></div>
+        <!-- Dynamic Sky Background -->
+        <div id="dynamicSky" class="absolute top-0 left-0 w-full h-3/4 transition-all duration-1000" style="z-index: 0; background: linear-gradient(to bottom, #fbbf24, #fb923c);"></div>
         
         <!-- Ground/Grass (static) -->
         <div class="absolute bottom-0 left-0 w-full h-1/4 bg-gradient-to-b from-green-400 to-green-600 dark:from-green-700 dark:to-green-900" style="z-index: 1;"></div>
