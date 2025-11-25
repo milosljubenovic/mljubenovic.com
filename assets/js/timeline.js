@@ -582,13 +582,21 @@ class Timeline {
     const characterX = containerWidth * (this.characterPositionPercent / 100);
     const milestoneInterval = 800;
     
+    // Store milestone distances for proximity checks
+    this.milestoneDistances = [];
+    
     // Create all job cards at their milestone positions
+    let cumulativeDistance = 0;
     this.milestones.forEach((milestone, index) => {
-      // Calculate world position: character starts at characterX, first milestone is 800px away
-      const worldPosition = (index + 1) * milestoneInterval;
-      const cardX = characterX + worldPosition;
+      // Use custom spacing for cats (200px instead of 800px)
+      const isCat = milestone.title && milestone.title.includes('Cat');
+      const spacing = isCat ? 200 : milestoneInterval;
       
-      const jobCard = this.createJobCard(milestone, cardX, worldPosition);
+      cumulativeDistance += spacing;
+      this.milestoneDistances.push(cumulativeDistance);
+      const cardX = characterX + cumulativeDistance;
+      
+      const jobCard = this.createJobCard(milestone, cardX, cumulativeDistance);
       jobCard.milestoneIndex = index;
       jobCard.isPermanent = true; // Mark as permanent world element
       this.jobCards.push(jobCard);
@@ -1169,13 +1177,12 @@ class Timeline {
   
   checkMilestoneProximity() {
     // Calculate milestone intervals based on distance traveled
-    const milestoneInterval = 800; // Distance between milestones
     const proximityThreshold = 100; // Within 100px of milestone
     let nearMilestone = false;
     
     // Check each milestone for highlighting when character passes
     for (let i = 0; i < this.milestones.length; i++) {
-      const milestoneDistance = (i + 1) * milestoneInterval;
+      const milestoneDistance = this.milestoneDistances[i];
       const distanceToMilestone = Math.abs(this.manualDistanceTraveled - milestoneDistance);
       
       // Check if we're near this milestone
