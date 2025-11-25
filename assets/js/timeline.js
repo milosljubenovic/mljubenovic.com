@@ -387,45 +387,9 @@ class Timeline {
   }
   
   setupControls() {
-    const startBtn = document.getElementById('startBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const speedBtn = document.getElementById('speedBtn');
-    
-    startBtn.addEventListener('click', () => {
-      if (this.currentMilestone < this.milestones.length) {
-        this.goToNextMilestone();
-        // Update button text after first click
-        if (this.currentMilestone === 1) {
-          startBtn.innerHTML = `
-            <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
-            </svg>
-            Continue Journey
-          `;
-        }
-      } else {
-        // Journey complete, reset on next click
-        this.reset();
-        this.goToNextMilestone();
-      }
-    });
-    
-    resetBtn.addEventListener('click', () => {
-      this.reset();
-      // Reset button text back to "Start Journey"
-      startBtn.innerHTML = `
-        <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
-        </svg>
-        Start Journey
-      `;
-    });
-    
-    speedBtn.addEventListener('click', () => {
-      this.currentSpeed = (this.currentSpeed + 1) % this.speeds.length;
-      const speed = this.speeds[this.currentSpeed];
-      document.getElementById('speedText').textContent = `Speed: ${speed.name}`;
-    });
+    // Controls are now handled by the joystick controller
+    // This method is kept for potential future use
+    console.log('Timeline controls initialized (using joystick controller)');
   }
   
   goToNextMilestone() {
@@ -654,4 +618,52 @@ class Timeline {
 // Initialize when page loads
 window.addEventListener('load', () => {
   const timeline = new Timeline();
+  
+  // Listen for joystick controller events
+  document.addEventListener('timelineControl', (e) => {
+    const action = e.detail.action;
+    console.log('Joystick action:', action);
+    
+    switch(action) {
+      case 'start':
+      case 'toggle':
+        // Start/Continue journey (same as Start button)
+        if (timeline.currentMilestone < timeline.milestones.length) {
+          timeline.goToNextMilestone();
+        } else {
+          timeline.reset();
+          timeline.goToNextMilestone();
+        }
+        break;
+        
+      case 'reset':
+        // Reset timeline (same as Reset button)
+        timeline.reset();
+        break;
+        
+      case 'speed':
+        // Toggle speed (same as Speed button)
+        timeline.currentSpeed = (timeline.currentSpeed + 1) % timeline.speeds.length;
+        const speed = timeline.speeds[timeline.currentSpeed];
+        const speedText = document.getElementById('speedText');
+        if (speedText) {
+          speedText.textContent = `Speed: ${speed.name}`;
+        }
+        break;
+        
+      case 'forward':
+        // Fast forward or skip to next milestone
+        if (timeline.currentMilestone < timeline.milestones.length && !timeline.isScrolling) {
+          timeline.goToNextMilestone();
+        }
+        break;
+        
+      case 'rewind':
+        // Go back to previous milestone (reset for now)
+        if (timeline.currentMilestone > 0) {
+          timeline.reset();
+        }
+        break;
+    }
+  });
 });

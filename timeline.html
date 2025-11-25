@@ -96,26 +96,29 @@ title: Timeline
       </div>
     </div>
 
-    <!-- Controls -->
-    <div class="flex flex-wrap justify-center gap-4 mt-8">
-      <button id="startBtn" class="group relative px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2">
-        <svg class="w-5 h-5 group-hover:animate-bounce" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
-        </svg>
-        Start Journey
-      </button>
-      <button id="resetBtn" class="px-8 py-4 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-200 border-2 border-gray-300 dark:border-gray-600 flex items-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
-        Reset
-      </button>
-      <button id="speedBtn" class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold rounded-xl shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-        </svg>
-        <span id="speedText">Speed: Normal</span>
-      </button>
+    <!-- NES Controller with Wire Connection -->
+    <div class="relative mt-16">
+      <!-- Wire connecting from game container to controller -->
+      <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center" style="top: -64px; z-index: 10;">
+        <!-- Connection port on the "TV" (game container bottom) -->
+        <div style="width: 24px; height: 12px; background: linear-gradient(to bottom, #1f2937, #111827); border: 2px solid #374151; border-radius: 0 0 4px 4px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);"></div>
+        
+        <!-- Wire body -->
+        <div class="relative" style="width: 8px; height: 48px;">
+          <div class="absolute inset-0 bg-gradient-to-r from-gray-500 via-gray-600 to-gray-500 rounded-full" style="box-shadow: inset 1px 0 2px rgba(0,0,0,0.5), inset -1px 0 2px rgba(0,0,0,0.3), 2px 2px 4px rgba(0,0,0,0.3);"></div>
+          <div class="absolute left-0 w-1 h-full bg-gray-400 rounded-full opacity-30"></div>
+        </div>
+      </div>
+      
+      <!-- Controller positioned on page -->
+      <div class="flex justify-center">
+        {% include joystick-controller.html %}
+      </div>
+    </div>
+    
+    <!-- Speed Indicator -->
+    <div class="mt-8 flex justify-center">
+      <span id="speedText" class="inline-block px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-bold text-lg shadow-lg">Speed: Normal</span>
     </div>
 
     <!-- Stats Cards -->
