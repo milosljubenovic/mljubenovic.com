@@ -1,12 +1,9 @@
 - name: GitHub
   url: https://github.com/milosljubenovic
   icon: github
-- name: LinkedIn
-  url: https://linkedin.com/in/your-profile
+- name: Linkedin
+  url: https://linkedin.com/in/mljubenovic
   icon: linkedin
-- name: Twitter
-  url: https://twitter.com/your_twitter
-  icon: twitter
 - name: Email
   url: mailto:your-email@example.com
   icon: email
