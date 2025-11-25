@@ -185,6 +185,10 @@ class Timeline {
     this.visitedMilestones = new Set();
     this.welcomeCard = null;
     this.welcomeCardDismissed = false;
+    this.isAutoMoving = false;
+    this.isPaused = false;
+    this.pauseStartTime = null;
+    this.pauseDuration = 5000; // 5 seconds
     
     this.init();
   }
@@ -587,12 +591,10 @@ class Timeline {
       // Dismiss welcome card when auto journey starts
       this.dismissWelcomeCard();
       
-      // Start animations
-      this.isScrolling = true;
-      this.journeyStartTime = Date.now();
-      this.journeyDuration = 3000 / this.speeds[this.currentSpeed].value; // 3 seconds base duration
-      
-      // Start character walking animation
+      // Start auto-movement by simulating moving right
+      this.isAutoMoving = true;
+      this.movingRight = true;
+      this.character.setFacing(true); // Face right
       this.character.startWalking();
       
       this.currentMilestone++;
@@ -628,6 +630,11 @@ class Timeline {
     this.character.standStill();
     this.currentMilestone = 0;
     this.isScrolling = false;
+    this.isAutoMoving = false;
+    this.movingLeft = false;
+    this.movingRight = false;
+    this.isPaused = false;
+    this.pauseStartTime = null;
     this.totalDistance = 0;
     this.nextCloudX = 0;
     this.nextTreeX = 0;
@@ -685,20 +692,22 @@ class Timeline {
   animate() {
     this.character.update();
     
-    // Manual character movement
-    if (this.isManualMode && (this.movingLeft || this.movingRight)) {
+    // Check if we're paused during auto-movement
+    if (this.isPaused && this.isAutoMoving) {
+      const pauseElapsed = Date.now() - this.pauseStartTime;
+      if (pauseElapsed >= this.pauseDuration) {
+        // Resume movement after pause
+        this.isPaused = false;
+        this.pauseStartTime = null;
+        this.character.startWalking();
+      }
+    }
+    
+    // Manual or auto character movement (both use same logic)
+    if (!this.isPaused && (this.isManualMode || this.isAutoMoving) && (this.movingLeft || this.movingRight)) {
       const currentSpeedMultiplier = this.speeds[this.currentSpeed].value;
       const speed = (this.movingRight ? this.baseManualSpeed : -this.baseManualSpeed) * currentSpeedMultiplier;
       this.updateManualMovement(speed);
-    }
-    
-    // Update job card physics (but don't stop character in manual mode)
-    if (this.currentJobCard) {
-      this.updateJobCardPhysics(!this.isManualMode); // Pass flag to control stopping
-    }
-    
-    if (this.isScrolling) {
-      this.updateInfiniteElements();
     }
     
     requestAnimationFrame(() => this.animate());
@@ -806,6 +815,14 @@ class Timeline {
       if (distanceToMilestone >= 0 && distanceToMilestone < 50 && !this.visitedMilestones.has(i)) {
         this.visitedMilestones.add(i);
         this.highlightEvent(i);
+        
+        // Pause at milestone if auto-moving
+        if (this.isAutoMoving && !this.isPaused) {
+          this.isPaused = true;
+          this.pauseStartTime = Date.now();
+          this.character.stopWalking();
+          console.log(`Pausing at milestone ${i + 1} for ${this.pauseDuration / 1000} seconds`);
+        }
       }
       
       // If moving backward, check if we've moved away from a milestone
